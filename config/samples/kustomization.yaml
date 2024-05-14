@@ -1,0 +1,6 @@
+## Append samples of your project ##
+resources:
+- tensegrity_v1alpha1_deployment.yaml
+- tensegrity_v1alpha1_statefulset.yaml
+- tensegrity_v1alpha1_daemonset.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

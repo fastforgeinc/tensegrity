@@ -1,0 +1,27 @@
+# permissions for end users to view statefulsets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: statefulset-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: tensegrity
+    app.kubernetes.io/part-of: tensegrity
+    app.kubernetes.io/managed-by: kustomize
+  name: statefulset-viewer-role
+rules:
+- apiGroups:
+  - tensegrity.fastforge.io
+  resources:
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - tensegrity.fastforge.io
+  resources:
+  - statefulsets/status
+  verbs:
+  - get
