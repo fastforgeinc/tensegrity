@@ -14,23 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package v1alpha1
 
 import (
 	"context"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	tensegrityv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
 )
 
-var _ = Describe("DaemonSet Controller", func() {
+var _ = Describe("StatefulSet Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -40,18 +42,27 @@ var _ = Describe("DaemonSet Controller", func() {
 			Name:      resourceName,
 			Namespace: "default", // TODO(user):Modify as needed
 		}
-		daemonset := &tensegrityv1alpha1.DaemonSet{}
+		statefulSet := &k8sv1alpha1.StatefulSet{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind DaemonSet")
-			err := k8sClient.Get(ctx, typeNamespacedName, daemonset)
+			By("creating the custom resource for the Kind StatefulSet")
+			err := k8sClient.Get(ctx, typeNamespacedName, statefulSet)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &tensegrityv1alpha1.DaemonSet{
+				resource := &k8sv1alpha1.StatefulSet{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: k8sv1alpha1.StatefulSetSpec{
+						StatefulSetSpec: appsv1.StatefulSetSpec{
+							Selector: &metav1.LabelSelector{},
+							Template: corev1.PodTemplateSpec{
+								Spec: corev1.PodSpec{
+									Containers: []corev1.Container{},
+								},
+							},
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
@@ -59,20 +70,16 @@ var _ = Describe("DaemonSet Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &tensegrityv1alpha1.DaemonSet{}
+			resource := &k8sv1alpha1.StatefulSet{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Cleanup the specific resource instance DaemonSet")
+			By("Cleanup the specific resource instance StatefulSet")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			controllerReconciler := &DaemonSetReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
-
+			controllerReconciler := NewStatefulSetReconciler(reconcilerConfig)
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})

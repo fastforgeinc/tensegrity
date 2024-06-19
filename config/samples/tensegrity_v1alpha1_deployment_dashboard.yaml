@@ -1,0 +1,93 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard
+spec:
+  rules:
+    - host: dashboard
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard
+                port:
+                  name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+spec:
+  selector:
+    app.kubernetes.io/name: dashboard
+  ports:
+    - name: http
+      port: 3000
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: k8s.tensegrity.fastforge.io/v1alpha1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: dashboard
+  name: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dashboard
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: registry.k8s.io/e2e-test-images/agnhost:2.39
+          command:
+            - /agnhost
+            - netexec
+            - --http-port
+            - "3000"
+          readinessProbe:
+            httpGet:
+              port: 3000
+          livenessProbe:
+            httpGet:
+              port: 3000
+            initialDelaySeconds: 10
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+  delegates:
+    - kind: Namespace
+      name: testing
+    - kind: Namespace
+      name: staging
+    - kind: Namespace
+      name: production
+  consumes:
+    - apiVersion: k8s.tensegrity.fastforge.io/v1alpha1
+      kind: Deployment
+      name: api
+      maps:
+        API_HOST: http-host
+        API_PORT: http-port
+  produces:
+    - key: http-host
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      fieldPath: '{ .spec.rules[0].host }.{ .metadata.namespace }'
+    - key: http-port
+      apiVersion: v1
+      kind: Service
+      fieldPath: '{ .spec.ports[?(@.name=="http")].port }'

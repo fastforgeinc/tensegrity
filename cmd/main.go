@@ -17,9 +17,18 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"os"
+	"time"
+
+	"reconciler.io/runtime/reconcilers"
+	"reconciler.io/runtime/tracker"
+
+	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
+	"github.com/fastforgeinc/tensegrity/internal/controller/k8s/v1alpha1"
+	"github.com/fastforgeinc/tensegrity/pkg/client"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -33,10 +42,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-
-	tensegrityfastforgeiov1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
-	tensegrityv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
-	"github.com/fastforgeinc/tensegrity/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -47,9 +52,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
-	utilruntime.Must(tensegrityfastforgeiov1alpha1.AddToScheme(scheme))
-	utilruntime.Must(tensegrityv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(k8sv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -97,7 +100,8 @@ func main() {
 	})
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme: scheme,
+		Scheme:    scheme,
+		NewClient: client.New,
 		Metrics: metricsserver.Options{
 			BindAddress:   metricsAddr,
 			SecureServing: secureMetrics,
@@ -124,25 +128,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controller.DeploymentReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Deployment")
+	reconcilerConfig := &reconcilers.Config{
+		Client:    mgr.GetClient(),
+		APIReader: mgr.GetAPIReader(),
+		Recorder:  mgr.GetEventRecorderFor("tensegrity"),
+		Tracker:   tracker.New(scheme, 1*time.Hour),
+	}
+
+	ctx := context.Background()
+	if err = v1alpha1.NewDeploymentReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Deployment", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
-	if err = (&controller.StatefulSetReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "StatefulSet")
+	if err = v1alpha1.NewStatefulSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "StatefulSet", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
-	if err = (&controller.DaemonSetReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DaemonSet")
+	if err = v1alpha1.NewDaemonSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "DaemonSet", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

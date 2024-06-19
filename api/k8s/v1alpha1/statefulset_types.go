@@ -17,39 +17,41 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/apps/v1"
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reconciler.io/runtime/apis"
 )
 
 // StatefulSetSpec defines the desired state of StatefulSet
 type StatefulSetSpec struct {
-	// Kubernetes stateful set spec.
-	v1.StatefulSetSpec `json:",inline"`
-	// WorkloadSpec defines which keys a stateful set consumes and produces, and a deployment delegates.
-	WorkloadSpec `json:",inline"`
+	// StatefulSetSpec is k8s.io/api/apps/v1.StatefulSetSpec type.
+	appsv1.StatefulSetSpec `json:",inline"`
+	// TensegritySpec defines which keys a workload consumes and/or produces, and its delegates.
+	v1alpha1.TensegritySpec `json:",inline"`
 }
 
 // StatefulSetStatus defines the observed state of StatefulSet
 type StatefulSetStatus struct {
-	// Kubernetes stateful set status.
-	v1.StatefulSetStatus `json:",inline"`
+	// Kubernetes status.
+	apis.Status `json:",inline"`
+	// Tensegrity status.
+	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
-// StatefulSet is the Schema for the statefulsets API
+// StatefulSet is a wrapper type of the k8s.io/api/apps/v1.StatefulSet type.
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 type StatefulSet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   StatefulSetSpec   `json:"spec,omitempty"`
+	Spec   StatefulSetSpec   `json:"spec"`
 	Status StatefulSetStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-
 // StatefulSetList contains a list of StatefulSet
+// +kubebuilder:object:root=true
 type StatefulSetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

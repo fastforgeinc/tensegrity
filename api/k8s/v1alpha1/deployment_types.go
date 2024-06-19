@@ -17,39 +17,41 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/apps/v1"
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reconciler.io/runtime/apis"
 )
 
 // DeploymentSpec defines the desired state of Deployment.
 type DeploymentSpec struct {
-	// Kubernetes deployment spec.
-	v1.DeploymentSpec `json:",inline"`
-	// WorkloadSpec defines which keys a deployment consumes and produces, and a deployment delegates.
-	WorkloadSpec `json:",inline"`
+	// DeploymentSpec is k8s.io/api/apps/v1.DeploymentSpec type.
+	appsv1.DeploymentSpec `json:",inline"`
+	// TensegritySpec defines which keys a workload consumes and/or produces, and its delegates.
+	v1alpha1.TensegritySpec `json:",inline"`
 }
 
-// DeploymentStatus defines the observed state of Deployment
+// DeploymentStatus defines the observed state of Deployment.
 type DeploymentStatus struct {
-	// Kubernetes deployment status.
-	v1.DeploymentStatus `json:",inline"`
+	// Kubernetes status.
+	apis.Status `json:",inline"`
+	// Tensegrity status.
+	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
-// Deployment is the Schema for the deployments API
+// Deployment is a wrapper type of the k8s.io/api/apps/v1.Deployment type.
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 type Deployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DeploymentSpec   `json:"spec,omitempty"`
+	Spec   DeploymentSpec   `json:"spec"`
 	Status DeploymentStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-
-// DeploymentList contains a list of Deployment
+// DeploymentList contains a list of Deployment.
+// +kubebuilder:object:root=true
 type DeploymentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
