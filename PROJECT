@@ -2,7 +2,7 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: fastforge.io
+domain: tensegrity.fastforge.io
 layout:
 - go.kubebuilder.io/v4
 projectName: tensegrity
@@ -12,27 +12,27 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: fastforge.io
-  group: tensegrity
+  domain: tensegrity.fastforge.io
+  group: k8s
   kind: Deployment
-  path: github.com/fastforgeinc/tensegrity/api/v1alpha1
+  path: github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: fastforge.io
-  group: tensegrity
+  domain: tensegrity.fastforge.io
+  group: k8s
   kind: StatefulSet
-  path: github.com/fastforgeinc/tensegrity/api/v1alpha1
+  path: github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: fastforge.io
-  group: tensegrity
+  domain: tensegrity.fastforge.io
+  group: k8s
   kind: DaemonSet
-  path: github.com/fastforgeinc/tensegrity/api/v1alpha1
+  path: github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1
   version: v1alpha1
 version: "3"

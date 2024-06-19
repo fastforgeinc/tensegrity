@@ -17,39 +17,41 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/apps/v1"
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reconciler.io/runtime/apis"
 )
 
-// DaemonSetSpec defines the desired state of DaemonSet
+// DaemonSetSpec defines the desired state of DaemonSet.
 type DaemonSetSpec struct {
-	// Kubernetes daemon set spec.
-	v1.DaemonSetSpec `json:",inline"`
-	// WorkloadSpec defines which keys a stateful set consumes and produces, and a deployment delegates.
-	WorkloadSpec `json:",inline"`
+	// DaemonSetSpec is k8s.io/api/apps/v1.DaemonSetSpec type.
+	appsv1.DaemonSetSpec `json:",inline"`
+	// TensegritySpec defines which keys a workload consumes and/or produces, and its delegates.
+	v1alpha1.TensegritySpec `json:",inline"`
 }
 
 // DaemonSetStatus defines the observed state of DaemonSet
 type DaemonSetStatus struct {
-	// Kubernetes daemon set status.
-	v1.DaemonSetStatus `json:",inline"`
+	// Kubernetes status.
+	apis.Status `json:",inline"`
+	// Tensegrity status.
+	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
-// DaemonSet is the Schema for the daemonsets API
+// DaemonSet is a wrapper type of the k8s.io/api/apps/v1.DaemonSet type.
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 type DaemonSet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DaemonSetSpec   `json:"spec,omitempty"`
+	Spec   DaemonSetSpec   `json:"spec"`
 	Status DaemonSetStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-
-// DaemonSetList contains a list of DaemonSet
+// DaemonSetList contains a list of DaemonSet.
+// +kubebuilder:object:root=true
 type DaemonSetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

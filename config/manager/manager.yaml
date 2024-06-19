@@ -11,6 +11,18 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: system
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    digitalocean.com/dosecret-identifier: registry-fastforge
+  name: registry-fastforge
+  namespace: system
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJyZWdpc3RyeS5kaWdpdGFsb2NlYW4uY29tIjp7ImF1dGgiOiJlWFZ5YVdsQVptRnpkR1p2Y21kbExtTnZiVHBrYjNCZmRqRmZNek5rWVRZMll6SmlZbU0xWlRZeU9XTTJNR0U0TURNell6aGhNalE0TlRGaE5EZzJZVE5oTkRrM1pqUXdaRFppWTJNek1UQmlNR0ZrTURjME1ESmhOQT09In19fQ==
+type: kubernetes.io/dockerconfigjson
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,6 +48,8 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      imagePullSecrets:
+        - name: registry-fastforge
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
       # according to the platforms which are supported by your solution.
       # It is considered best practice to support multiple architectures. You can
@@ -71,6 +85,7 @@ spec:
         args:
         - --leader-elect
         image: controller:latest
+        imagePullPolicy: Always
         name: manager
         securityContext:
           allowPrivilegeEscalation: false

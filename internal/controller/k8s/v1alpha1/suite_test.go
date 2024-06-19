@@ -14,26 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package v1alpha1
 
 import (
 	"fmt"
 	"path/filepath"
+	"reconciler.io/runtime/reconcilers"
+	"reconciler.io/runtime/tracker"
 	"runtime"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	tensegrityfastforgeiov1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
-	tensegrityv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -41,8 +45,10 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var cfg *rest.Config
+var mgr manager.Manager
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var reconcilerConfig *reconcilers.Config
 
 func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -55,7 +61,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "..", "..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
 
 		// The BinaryAssetsDirectory is only required if you want to run the tests directly
@@ -63,7 +69,7 @@ var _ = BeforeSuite(func() {
 		// default path defined in controller-runtime which is /usr/local/kubebuilder/.
 		// Note that you must have the required binaries setup under the bin directory to perform
 		// the tests directly. When we run make test it will be setup and used automatically.
-		BinaryAssetsDirectory: filepath.Join("..", "..", "bin", "k8s",
+		BinaryAssetsDirectory: filepath.Join("..", "..", "..", "..", "bin", "k8s",
 			fmt.Sprintf("1.29.0-%s-%s", runtime.GOOS, runtime.GOARCH)),
 	}
 
@@ -73,10 +79,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = tensegrityfastforgeiov1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = tensegrityv1alpha1.AddToScheme(scheme.Scheme)
+	err = k8sv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
@@ -85,6 +88,16 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+	mgr, err = controllerruntime.NewManager(cfg, controllerruntime.Options{})
+	Expect(err).NotTo(HaveOccurred())
+	Expect(mgr).NotTo(BeNil())
+
+	reconcilerConfig = &reconcilers.Config{
+		Client:    k8sClient,
+		APIReader: mgr.GetAPIReader(),
+		Recorder:  mgr.GetEventRecorderFor("tensegrity"),
+		Tracker:   tracker.New(scheme.Scheme, 1*time.Hour),
+	}
 })
 
 var _ = AfterSuite(func() {
