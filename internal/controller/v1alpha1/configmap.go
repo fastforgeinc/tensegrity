@@ -22,12 +22,11 @@ func NewConfigMapReconciler() *ConfigMapReconciler {
 	return r
 }
 
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
+
 // ConfigMapReconciler creates a ConfigMap Kubernetes resource
 // from consumed keys and binds to the related workload.
-// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",resources=namespaces/status,verbs=get
-// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",resources=configmaps/status,verbs=get
 type ConfigMapReconciler struct {
 	configMapReconciler
 }

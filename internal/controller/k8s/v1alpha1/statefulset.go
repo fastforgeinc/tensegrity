@@ -18,15 +18,18 @@ package v1alpha1
 
 import (
 	"context"
-	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
-	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
-	"github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reconciler.io/runtime/reconcilers"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+
+	"reconciler.io/runtime/reconcilers"
+
+	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
+	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	"github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
 )
 
 func NewStatefulSetReconciler(config *reconcilers.Config) *StatefulSetReconciler {
@@ -55,11 +58,12 @@ func NewStatefulSetReconciler(config *reconcilers.Config) *StatefulSetReconciler
 	}
 }
 
-// StatefulSetReconciler reconciles tensegrity v1alpha1.Deployment resource,
+// +kubebuilder:rbac:groups=k8s.tensegrity.fastforge.io,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8s.tensegrity.fastforge.io,resources=statefulsets/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.tensegrity.fastforge.io,resources=statefulsets/finalizers,verbs=update
+
+// StatefulSetReconciler reconciles tensegrity api/k8s/v1alpha1.Deployment resource,
 // and runs sequence of other reconcilers to get desired workload.
-// +kubebuilder:rbac:groups=tensegrity.fastforge.io,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=tensegrity.fastforge.io,resources=statefulsets/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=tensegrity.fastforge.io,resources=statefulsets/finalizers,verbs=update
 type StatefulSetReconciler = reconcilers.ResourceReconciler[*k8sv1alpha1.StatefulSet]
 
 func NewStatefulSetChildReconciler() *StatefulSetChildReconciler {
@@ -73,11 +77,12 @@ func NewStatefulSetChildReconciler() *StatefulSetChildReconciler {
 	return r
 }
 
-// StatefulSetChildReconciler creates child stateful set from workload specs,
-// add ConfigMap and Secret if they are present.
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=statefulsets/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=statefulsets/finalizers,verbs=update
+
+// StatefulSetChildReconciler creates child k8s.io/api/apps/v1.StatefulSet set from workload specs,
+// adds ConfigMap and Secret if they are present.
 type StatefulSetChildReconciler struct {
 	statefulSetChildReconciler
 }

@@ -39,9 +39,10 @@ type StatefulSetStatus struct {
 	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
-// StatefulSet is a wrapper type of the k8s.io/api/apps/v1.StatefulSet type.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+
+// StatefulSet is a wrapper type of the k8s.io/api/apps/v1.StatefulSet type.
 type StatefulSet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -50,8 +51,9 @@ type StatefulSet struct {
 	Status StatefulSetStatus `json:"status,omitempty"`
 }
 
-// StatefulSetList contains a list of StatefulSet
 // +kubebuilder:object:root=true
+
+// StatefulSetList contains a list of StatefulSet
 type StatefulSetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
