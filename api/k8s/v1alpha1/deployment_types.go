@@ -39,9 +39,10 @@ type DeploymentStatus struct {
 	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
-// Deployment is a wrapper type of the k8s.io/api/apps/v1.Deployment type.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+
+// Deployment is a wrapper type of the k8s.io/api/apps/v1.Deployment type.
 type Deployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -50,8 +51,9 @@ type Deployment struct {
 	Status DeploymentStatus `json:"status,omitempty"`
 }
 
-// DeploymentList contains a list of Deployment.
 // +kubebuilder:object:root=true
+
+// DeploymentList contains a list of Deployment.
 type DeploymentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

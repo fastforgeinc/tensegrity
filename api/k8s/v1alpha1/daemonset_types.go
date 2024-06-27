@@ -39,9 +39,10 @@ type DaemonSetStatus struct {
 	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
-// DaemonSet is a wrapper type of the k8s.io/api/apps/v1.DaemonSet type.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+
+// DaemonSet is a wrapper type of the k8s.io/api/apps/v1.DaemonSet type.
 type DaemonSet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -50,8 +51,9 @@ type DaemonSet struct {
 	Status DaemonSetStatus `json:"status,omitempty"`
 }
 
-// DaemonSetList contains a list of DaemonSet.
 // +kubebuilder:object:root=true
+
+// DaemonSetList contains a list of DaemonSet.
 type DaemonSetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

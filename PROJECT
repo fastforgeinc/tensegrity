@@ -5,6 +5,7 @@
 domain: tensegrity.fastforge.io
 layout:
 - go.kubebuilder.io/v4
+multigroup: true
 projectName: tensegrity
 repo: github.com/fastforgeinc/tensegrity
 resources:
@@ -34,5 +35,14 @@ resources:
   group: k8s
   kind: DaemonSet
   path: github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: tensegrity.fastforge.io
+  group: argo
+  kind: Rollout
+  path: github.com/fastforgeinc/tensegrity/api/argo/v1alpha1
   version: v1alpha1
 version: "3"

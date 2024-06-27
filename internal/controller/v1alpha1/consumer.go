@@ -25,11 +25,12 @@ func NewConsumerReconciler() *ConsumerReconciler {
 	return r
 }
 
+// +kubebuilder:rbac:groups="*",resources=*,verbs=get;list;watch
+// +kubebuilder:rbac:groups="*",resources=*/status,verbs=get
+// +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
+
 // ConsumerReconciler consumes keys from delegate workloads and puts into stash,
 // for further processing by ConfigMapReconciler and SecretReconciler.
-// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",resources=namespaces/status,verbs=get
-// +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
 type ConsumerReconciler struct {
 	workloadReconciler
 }
@@ -99,8 +100,8 @@ func (r *ConsumerReconciler) resolveKeysFromNamespace(
 		return err
 	}
 
-	for consumeRef, consume := range consumesByRef {
-		workload := v1alpha1.TensegrityFromRef(consumeRef)
+	for consumesRef, consumes := range consumesByRef {
+		workload := v1alpha1.TensegrityFromRef(consumesRef)
 		workload.SetNamespace(namespace.Name)
 		err = config.TrackAndGet(ctx, client.ObjectKeyFromObject(workload), workload)
 		if k8serrors.IsNotFound(err) {
@@ -108,8 +109,8 @@ func (r *ConsumerReconciler) resolveKeysFromNamespace(
 		} else if err != nil {
 			return err
 		}
-		reverseMaps := make(map[string]string, len(consume.Maps))
-		for env, key := range consume.Maps {
+		reverseMaps := make(map[string]string, len(consumes.Maps))
+		for env, key := range consumes.Maps {
 			reverseMaps[key] = env
 		}
 		for _, produces := range workload.Status.Produces {
@@ -136,12 +137,19 @@ func (r *ConsumerReconciler) resolveKeysFromNamespace(
 			if err = jp.Execute(buf, obj.Object); err != nil {
 				return err
 			}
+			if buf.Len() == 0 {
+				return nil
+			}
 
 			if produces.Sensitive {
 				sensitiveKeys[env] = buf.String()
 			} else {
 				keys[env] = buf.String()
 			}
+			delete(reverseMaps, produces.Key)
+		}
+		if len(reverseMaps) == 0 {
+			delete(consumesByRef, consumesRef)
 		}
 	}
 

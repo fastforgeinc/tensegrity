@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 // +kubebuilder:object:generate=true
-// +groupName=k8s.tensegrity.fastforge.io
+// +groupName=argo.tensegrity.fastforge.io
 
-// Package v1alpha1 contains API Schema definitions for the Tensegrity Kubernetes workload types.
+// Package v1alpha1 contains API Schema definitions for the argo v1alpha1 API group
 package v1alpha1
 
 import (
@@ -27,7 +27,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "k8s.tensegrity.fastforge.io", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "argo.tensegrity.fastforge.io", Version: "v1alpha1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

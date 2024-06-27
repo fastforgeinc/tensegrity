@@ -18,15 +18,18 @@ package v1alpha1
 
 import (
 	"context"
-	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
-	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
-	"github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reconciler.io/runtime/reconcilers"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+
+	"reconciler.io/runtime/reconcilers"
+
+	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
+	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	"github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
 )
 
 func NewDaemonSetReconciler(config *reconcilers.Config) *DaemonSetReconciler {
@@ -55,11 +58,12 @@ func NewDaemonSetReconciler(config *reconcilers.Config) *DaemonSetReconciler {
 	}
 }
 
-// DaemonSetReconciler reconciles tensegrity v1alpha1.DaemonSet resource,
+// +kubebuilder:rbac:groups=k8s.tensegrity.fastforge.io,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=k8s.tensegrity.fastforge.io,resources=daemonsets/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=k8s.tensegrity.fastforge.io,resources=daemonsets/finalizers,verbs=update
+
+// DaemonSetReconciler reconciles tensegrity api/k8s/v1alpha1.DaemonSet resource,
 // and runs sequence of other reconcilers to get desired workload.
-// +kubebuilder:rbac:groups=tensegrity.fastforge.io,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=tensegrity.fastforge.io,resources=daemonsets/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=tensegrity.fastforge.io,resources=daemonsets/finalizers,verbs=update
 type DaemonSetReconciler = reconcilers.ResourceReconciler[*k8sv1alpha1.DaemonSet]
 
 func NewDaemonSetChildReconciler() *DaemonSetChildReconciler {
@@ -73,11 +77,12 @@ func NewDaemonSetChildReconciler() *DaemonSetChildReconciler {
 	return r
 }
 
-// DaemonSetChildReconciler creates child daemonSet from workload specs,
-// add ConfigMap and Secret if they are present.
 // +kubebuilder:rbac:groups=apps,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=daemonsets/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=daemonsets/finalizers,verbs=update
+
+// DaemonSetChildReconciler creates child k8s.io/api/apps/v1.DaemonSet from workload specs,
+// adds ConfigMap and Secret if they are present.
 type DaemonSetChildReconciler struct {
 	daemonSetChildReconciler
 }

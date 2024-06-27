@@ -23,10 +23,11 @@ func NewSecretReconciler() *SecretReconciler {
 	return r
 }
 
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=secrets/status,verbs=get
+
 // SecretReconciler creates a Secret Kubernetes resource
 // from consumed keys and binds to the related workload.
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",resources=secrets/status,verbs=get
 type SecretReconciler struct {
 	secretReconciler
 }

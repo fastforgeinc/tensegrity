@@ -3,4 +3,5 @@ resources:
 - tensegrity_v1alpha1_deployment_dashboard.yaml
 #- tensegrity_v1alpha1_statefulset.yaml
 #- tensegrity_v1alpha1_daemonset.yaml
+- argo_v1alpha1_rollout.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

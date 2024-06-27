@@ -5,7 +5,57 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - tensegrity.fastforge.io
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets/status
+  verbs:
+  - get
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - '*'
+  resources:
+  - '*/status'
+  verbs:
+  - get
+- apiGroups:
+  - apps
   resources:
   - daemonsets
   verbs:
@@ -17,13 +67,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - tensegrity.fastforge.io
+  - apps
   resources:
   - daemonsets/finalizers
   verbs:
   - update
 - apiGroups:
-  - tensegrity.fastforge.io
+  - apps
   resources:
   - daemonsets/status
   verbs:
@@ -31,7 +81,33 @@ rules:
   - patch
   - update
 - apiGroups:
-  - tensegrity.fastforge.io
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - apps
   resources:
   - statefulsets
   verbs:
@@ -43,13 +119,155 @@ rules:
   - update
   - watch
 - apiGroups:
-  - tensegrity.fastforge.io
+  - apps
   resources:
   - statefulsets/finalizers
   verbs:
   - update
 - apiGroups:
-  - tensegrity.fastforge.io
+  - apps
+  resources:
+  - statefulsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - argo.tensegrity.fastforge.io
+  resources:
+  - rollouts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - argo.tensegrity.fastforge.io
+  resources:
+  - rollouts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - argo.tensegrity.fastforge.io
+  resources:
+  - rollouts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - argoproj.io
+  resources:
+  - rollouts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - argoproj.io
+  resources:
+  - rollouts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - argoproj.io
+  resources:
+  - rollouts/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - daemonsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - daemonsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - daemonsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - deployments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
+  resources:
+  - statefulsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - k8s.tensegrity.fastforge.io
   resources:
   - statefulsets/status
   verbs:

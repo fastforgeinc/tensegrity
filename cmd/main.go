@@ -26,8 +26,13 @@ import (
 	"reconciler.io/runtime/reconcilers"
 	"reconciler.io/runtime/tracker"
 
-	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
-	"github.com/fastforgeinc/tensegrity/internal/controller/k8s/v1alpha1"
+	rolloutsv1alpha1 "github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1"
+
+	apiargov1alpha1 "github.com/fastforgeinc/tensegrity/api/argo/v1alpha1"
+	apik8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
+	controllerargov1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/argo/v1alpha1"
+	controllerk8sv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/k8s/v1alpha1"
+
 	"github.com/fastforgeinc/tensegrity/pkg/client"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -52,7 +57,9 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(k8sv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(apik8sv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(apiargov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(rolloutsv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -136,16 +143,20 @@ func main() {
 	}
 
 	ctx := context.Background()
-	if err = v1alpha1.NewDeploymentReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	if err = controllerk8sv1alpha1.NewDeploymentReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Deployment", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
-	if err = v1alpha1.NewStatefulSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	if err = controllerk8sv1alpha1.NewStatefulSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "StatefulSet", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
-	if err = v1alpha1.NewDaemonSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	if err = controllerk8sv1alpha1.NewDaemonSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DaemonSet", "version", "k8s/v1alpha1")
+		os.Exit(1)
+	}
+	if err = controllerargov1alpha1.NewRolloutReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Rollout", "version", "argo/v1alpha1")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

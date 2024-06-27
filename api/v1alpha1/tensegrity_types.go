@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha1 is common types for other versioned resources.
 // +kubebuilder:object:generate=true
+
+// Package v1alpha1 is common types for other versioned resources.
 package v1alpha1
 
 import (
@@ -52,8 +53,9 @@ type ProducesStatus struct {
 	Value string `json:"value"`
 }
 
-// Tensegrity is a shared duck type for other reconcilers.
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// Tensegrity is a shared duck type for other reconcilers.
 type Tensegrity struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
