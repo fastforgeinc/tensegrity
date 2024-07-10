@@ -18,6 +18,10 @@ resources:
   kind: Deployment
   path: github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -27,6 +31,10 @@ resources:
   kind: StatefulSet
   path: github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -36,6 +44,10 @@ resources:
   kind: DaemonSet
   path: github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -45,4 +57,8 @@ resources:
   kind: Rollout
   path: github.com/fastforgeinc/tensegrity/api/argo/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 version: "3"

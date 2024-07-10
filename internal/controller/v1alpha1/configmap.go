@@ -47,16 +47,12 @@ func (r *ConfigMapReconciler) DesiredChild(
 
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        resource.Name + "-tensegrity",
+			Name:        reconcilers.RetrieveValue(ctx, configMapNameStashKey).(string),
 			Labels:      resource.Labels,
 			Namespace:   resource.Namespace,
 			Annotations: make(map[string]string),
 		},
 		Data: keys,
-	}
-
-	if name, ok := reconcilers.RetrieveValue(ctx, configMapNameStashKey).(string); ok && len(name) > 0 {
-		configMap.ObjectMeta.Name = name
 	}
 
 	reconcilers.StashValue(ctx, configMapStashKey, configMap)
