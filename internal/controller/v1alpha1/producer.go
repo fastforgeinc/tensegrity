@@ -43,12 +43,9 @@ func (r *ProducerReconciler) updateStatus(
 	config := reconcilers.RetrieveConfigOrDie(ctx)
 	obj := new(unstructured.Unstructured)
 	obj.SetKind(produces.Kind)
-	obj.SetName(resource.Name)
+	obj.SetName(produces.Name)
 	obj.SetNamespace(resource.Namespace)
 	obj.SetAPIVersion(produces.APIVersion)
-	if len(produces.Name) > 0 {
-		obj.SetName(produces.Name)
-	}
 
 	err = config.Get(ctx, client.ObjectKeyFromObject(obj), obj)
 	if err != nil {

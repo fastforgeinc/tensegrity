@@ -69,8 +69,10 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var certDir string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.StringVar(&certDir, "cert-dir", "", "The directory that contains the server key and certificate.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -102,9 +104,14 @@ func main() {
 		tlsOpts = append(tlsOpts, disableHTTP2)
 	}
 
-	webhookServer := webhook.NewServer(webhook.Options{
+	webhookOptions := webhook.Options{
 		TLSOpts: tlsOpts,
-	})
+	}
+	if len(certDir) > 0 {
+		webhookOptions.CertDir = certDir
+	}
+
+	webhookServer := webhook.NewServer(webhookOptions)
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:    scheme,
@@ -158,6 +165,25 @@ func main() {
 	if err = controllerargov1alpha1.NewRolloutReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Rollout", "version", "argo/v1alpha1")
 		os.Exit(1)
+	}
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = new(apik8sv1alpha1.Deployment).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Deployment")
+			os.Exit(1)
+		}
+		if err = new(apik8sv1alpha1.StatefulSet).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "StatefulSet")
+			os.Exit(1)
+		}
+		if err = new(apik8sv1alpha1.DaemonSet).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "DaemonSet")
+			os.Exit(1)
+		}
+
+		if err = new(apiargov1alpha1.Rollout).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Rollout")
+			os.Exit(1)
+		}
 	}
 	//+kubebuilder:scaffold:builder
 

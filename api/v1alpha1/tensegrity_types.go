@@ -66,11 +66,15 @@ type Tensegrity struct {
 
 // TensegritySpec is Tensegrity controller specs.
 type TensegritySpec struct {
-	// Delegates is a slice of references to a Kubernetes resource used to resolve consumed keys.
+	// Delegates is a slice of references to a Kubernetes resource used to resolve consumed keys,
+	// if empty defaults to a resource namespace.
+	// +optional
 	Delegates []corev1.ObjectReference `json:"delegates,omitempty"`
 	// Consumes is a map of other workloads and ConsumeSpec.
+	// +optional
 	Consumes []ConsumeSpec `json:"consumes,omitempty"`
 	// Produces is a map of keys and value sources to get from.
+	// +optional
 	Produces []ProduceSpec `json:"produces,omitempty"`
 	// ConfigMapName is name of a ConfigMap is being generates by tensegrity controller,
 	// defaults to <workload-name>-tensegrity.

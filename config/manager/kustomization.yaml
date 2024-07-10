@@ -5,4 +5,4 @@ resources:
 images:
 - name: controller
   newName: registry.digitalocean.com/fastforge/tensegrity
-  newTag: latest
+  newTag: webhooks
