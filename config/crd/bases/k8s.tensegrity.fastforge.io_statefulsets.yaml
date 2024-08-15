@@ -14,7 +14,20 @@ spec:
     singular: statefulset
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.produced
+      name: Produced
+      type: string
+    - jsonPath: .status.consumed
+      name: Consumed
+      type: string
+    - jsonPath: .status.configMapName
+      name: Config Map
+      type: string
+    - jsonPath: .status.secretName
+      name: Secret
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -3734,30 +3747,20 @@ spec:
                     lastTransitionTime:
                       format: date-time
                       type: string
-                    message:
-                      maxLength: 32768
+                    lastUpdateTime:
+                      format: date-time
                       type: string
-                    observedGeneration:
-                      format: int64
-                      minimum: 0
-                      type: integer
+                    message:
+                      type: string
                     reason:
-                      maxLength: 1024
-                      minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
                       type: string
                     status:
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
                       type: string
                     type:
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
                   required:
                   - lastTransitionTime
+                  - lastUpdateTime
                   - message
                   - reason
                   - status
@@ -3766,10 +3769,64 @@ spec:
                 type: array
               configMapName:
                 type: string
+              consumed:
+                type: string
+              consumedKeys:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    delegate:
+                      properties:
+                        apiVersion:
+                          type: string
+                        fieldPath:
+                          type: string
+                        kind:
+                          type: string
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                        resourceVersion:
+                          type: string
+                        uid:
+                          type: string
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    env:
+                      type: string
+                    fieldPath:
+                      type: string
+                    key:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    reason:
+                      type: string
+                    resourceVersion:
+                      type: string
+                    status:
+                      type: string
+                    uid:
+                      type: string
+                  required:
+                  - env
+                  - key
+                  - status
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
               observedGeneration:
                 format: int64
                 type: integer
-              produces:
+              produced:
+                type: string
+              producedKeys:
                 items:
                   properties:
                     apiVersion:
@@ -3784,17 +3841,21 @@ spec:
                       type: string
                     namespace:
                       type: string
+                    reason:
+                      type: string
                     resourceVersion:
                       type: string
                     sensitive:
                       type: boolean
+                    status:
+                      type: string
                     uid:
                       type: string
                     value:
                       type: string
                   required:
                   - key
-                  - value
+                  - status
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array

@@ -91,6 +91,16 @@ type RolloutChildReconciler struct {
 func (r *RolloutChildReconciler) DesiredChild(
 	ctx context.Context, resource *argov1alpha1.Rollout) (*rolloutsv1alpha1.Rollout, error) {
 
+	child := &rolloutsv1alpha1.Rollout{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        resource.Name,
+			Labels:      resource.Labels,
+			Namespace:   resource.Namespace,
+			Annotations: make(map[string]string),
+		},
+		Spec: resource.Spec.RolloutSpec,
+	}
+
 	var envFrom []corev1.EnvFromSource
 	if secret := v1alpha1.SecretFromContext(ctx); secret != nil {
 		envFrom = append(envFrom, corev1.EnvFromSource{
@@ -109,25 +119,17 @@ func (r *RolloutChildReconciler) DesiredChild(
 	}
 
 	if len(envFrom) > 0 {
-		for i, container := range resource.Spec.RolloutSpec.Template.Spec.InitContainers {
-			resource.Spec.RolloutSpec.Template.Spec.InitContainers[i].EnvFrom = append(
+		for i, container := range child.Spec.Template.Spec.InitContainers {
+			child.Spec.Template.Spec.InitContainers[i].EnvFrom = append(
 				container.EnvFrom, envFrom...)
 		}
-		for i, container := range resource.Spec.RolloutSpec.Template.Spec.Containers {
-			resource.Spec.RolloutSpec.Template.Spec.Containers[i].EnvFrom = append(
+		for i, container := range child.Spec.Template.Spec.Containers {
+			child.Spec.Template.Spec.Containers[i].EnvFrom = append(
 				container.EnvFrom, envFrom...)
 		}
 	}
 
-	return &rolloutsv1alpha1.Rollout{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        resource.Name,
-			Labels:      resource.Labels,
-			Namespace:   resource.Namespace,
-			Annotations: make(map[string]string),
-		},
-		Spec: resource.Spec.RolloutSpec,
-	}, nil
+	return child, nil
 }
 
 func (r *RolloutChildReconciler) MergeBeforeUpdate(current, desired *rolloutsv1alpha1.Rollout) {
@@ -136,9 +138,8 @@ func (r *RolloutChildReconciler) MergeBeforeUpdate(current, desired *rolloutsv1a
 }
 
 func (r *RolloutChildReconciler) ReflectChildStatusOnParent(
-	ctx context.Context, parent *argov1alpha1.Rollout, child *rolloutsv1alpha1.Rollout, err error) {
+	_ context.Context, _ *argov1alpha1.Rollout, _ *rolloutsv1alpha1.Rollout, _ error) {
 
-	// TODO: add status of configuration
 	return
 }
 

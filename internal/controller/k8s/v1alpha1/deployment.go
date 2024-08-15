@@ -90,6 +90,16 @@ type DeploymentChildReconciler struct {
 func (r *DeploymentChildReconciler) DesiredChild(
 	ctx context.Context, resource *k8sv1alpha1.Deployment) (*appsv1.Deployment, error) {
 
+	child := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        resource.Name,
+			Labels:      resource.Labels,
+			Namespace:   resource.Namespace,
+			Annotations: make(map[string]string),
+		},
+		Spec: resource.Spec.DeploymentSpec,
+	}
+
 	var envFrom []corev1.EnvFromSource
 	if secret := v1alpha1.SecretFromContext(ctx); secret != nil {
 		envFrom = append(envFrom, corev1.EnvFromSource{
@@ -108,25 +118,17 @@ func (r *DeploymentChildReconciler) DesiredChild(
 	}
 
 	if len(envFrom) > 0 {
-		for i, container := range resource.Spec.DeploymentSpec.Template.Spec.InitContainers {
-			resource.Spec.DeploymentSpec.Template.Spec.InitContainers[i].EnvFrom = append(
+		for i, container := range child.Spec.Template.Spec.InitContainers {
+			child.Spec.Template.Spec.InitContainers[i].EnvFrom = append(
 				container.EnvFrom, envFrom...)
 		}
-		for i, container := range resource.Spec.DeploymentSpec.Template.Spec.Containers {
-			resource.Spec.DeploymentSpec.Template.Spec.Containers[i].EnvFrom = append(
+		for i, container := range child.Spec.Template.Spec.Containers {
+			child.Spec.Template.Spec.Containers[i].EnvFrom = append(
 				container.EnvFrom, envFrom...)
 		}
 	}
 
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        resource.Name,
-			Labels:      resource.Labels,
-			Namespace:   resource.Namespace,
-			Annotations: make(map[string]string),
-		},
-		Spec: resource.Spec.DeploymentSpec,
-	}, nil
+	return child, nil
 }
 
 func (r *DeploymentChildReconciler) MergeBeforeUpdate(current, desired *appsv1.Deployment) {
@@ -135,9 +137,8 @@ func (r *DeploymentChildReconciler) MergeBeforeUpdate(current, desired *appsv1.D
 }
 
 func (r *DeploymentChildReconciler) ReflectChildStatusOnParent(
-	ctx context.Context, parent *k8sv1alpha1.Deployment, child *appsv1.Deployment, err error) {
+	_ context.Context, _ *k8sv1alpha1.Deployment, _ *appsv1.Deployment, _ error) {
 
-	// TODO: add status of configuration
 	return
 }
 
