@@ -20,7 +20,6 @@ import (
 	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reconciler.io/runtime/apis"
 )
 
 // DeploymentSpec defines the desired state of Deployment.
@@ -33,14 +32,16 @@ type DeploymentSpec struct {
 
 // DeploymentStatus defines the observed state of Deployment.
 type DeploymentStatus struct {
-	// Kubernetes status.
-	apis.Status `json:",inline"`
 	// Tensegrity status.
 	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Produced",type=string,JSONPath=`.status.produced`
+// +kubebuilder:printcolumn:name="Consumed",type=string,JSONPath=`.status.consumed`
+// +kubebuilder:printcolumn:name="Config Map",type=string,JSONPath=`.status.configMapName`
+// +kubebuilder:printcolumn:name="Secret",type=string,JSONPath=`.status.secretName`
 
 // Deployment is a wrapper type of the k8s.io/api/apps/v1.Deployment type.
 type Deployment struct {

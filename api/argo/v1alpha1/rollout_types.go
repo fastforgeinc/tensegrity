@@ -23,7 +23,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"reconciler.io/runtime/apis"
 )
 
 // RolloutSpec defines the desired state of Rollout
@@ -69,14 +68,16 @@ func (s *RolloutSpec) MarshalJSON() ([]byte, error) {
 
 // RolloutStatus defines the observed state of Rollout
 type RolloutStatus struct {
-	// Kubernetes status.
-	apis.Status `json:",inline"`
 	// Tensegrity status.
 	v1alpha1.TensegrityStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Produced",type=string,JSONPath=`.status.produced`
+// +kubebuilder:printcolumn:name="Consumed",type=string,JSONPath=`.status.consumed`
+// +kubebuilder:printcolumn:name="Config Map",type=string,JSONPath=`.status.configMapName`
+// +kubebuilder:printcolumn:name="Secret",type=string,JSONPath=`.status.secretName`
 
 // Rollout is a wrapper type of github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.Rollout type.
 type Rollout struct {

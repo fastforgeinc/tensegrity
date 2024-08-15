@@ -90,6 +90,16 @@ type StatefulSetChildReconciler struct {
 func (r *StatefulSetChildReconciler) DesiredChild(
 	ctx context.Context, resource *k8sv1alpha1.StatefulSet) (*appsv1.StatefulSet, error) {
 
+	child := &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        resource.Name,
+			Labels:      resource.Labels,
+			Namespace:   resource.Namespace,
+			Annotations: make(map[string]string),
+		},
+		Spec: resource.Spec.StatefulSetSpec,
+	}
+
 	var envFrom []corev1.EnvFromSource
 	if secret := v1alpha1.SecretFromContext(ctx); secret != nil {
 		envFrom = append(envFrom, corev1.EnvFromSource{
@@ -108,25 +118,17 @@ func (r *StatefulSetChildReconciler) DesiredChild(
 	}
 
 	if len(envFrom) > 0 {
-		for i, container := range resource.Spec.StatefulSetSpec.Template.Spec.InitContainers {
-			resource.Spec.StatefulSetSpec.Template.Spec.InitContainers[i].EnvFrom = append(
+		for i, container := range child.Spec.Template.Spec.InitContainers {
+			child.Spec.Template.Spec.InitContainers[i].EnvFrom = append(
 				container.EnvFrom, envFrom...)
 		}
-		for i, container := range resource.Spec.StatefulSetSpec.Template.Spec.Containers {
-			resource.Spec.StatefulSetSpec.Template.Spec.Containers[i].EnvFrom = append(
+		for i, container := range child.Spec.Template.Spec.Containers {
+			child.Spec.Template.Spec.Containers[i].EnvFrom = append(
 				container.EnvFrom, envFrom...)
 		}
 	}
 
-	return &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        resource.Name,
-			Labels:      resource.Labels,
-			Namespace:   resource.Namespace,
-			Annotations: make(map[string]string),
-		},
-		Spec: resource.Spec.StatefulSetSpec,
-	}, nil
+	return child, nil
 }
 
 func (r *StatefulSetChildReconciler) MergeBeforeUpdate(current, desired *appsv1.StatefulSet) {
@@ -135,9 +137,8 @@ func (r *StatefulSetChildReconciler) MergeBeforeUpdate(current, desired *appsv1.
 }
 
 func (r *StatefulSetChildReconciler) ReflectChildStatusOnParent(
-	ctx context.Context, parent *k8sv1alpha1.StatefulSet, child *appsv1.StatefulSet, err error) {
+	_ context.Context, _ *k8sv1alpha1.StatefulSet, _ *appsv1.StatefulSet, _ error) {
 
-	// TODO: add status of configuration
 	return
 }
 

@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/util/jsonpath"
 )
@@ -20,6 +20,8 @@ func (s *TensegritySpec) Validate() (allErrs field.ErrorList) {
 }
 
 func (s *TensegritySpec) validateConsumes() (errs field.ErrorList) {
+	seenEnvs := make(map[string]struct{})
+	seenRefs := make(map[corev1.ObjectReference]struct{})
 	for i, c := range s.Consumes {
 		if len(c.APIVersion) == 0 {
 			errs = append(errs, field.Required(
@@ -37,6 +39,18 @@ func (s *TensegritySpec) validateConsumes() (errs field.ErrorList) {
 			errs = append(errs, field.Required(
 				field.NewPath("spec").Child("consumes").Index(i).Child("maps"),
 				"valid environment variables to keys mapping"))
+		}
+		if _, ok := seenRefs[c.ObjectReference]; ok {
+			errs = append(errs, field.Duplicate(
+				field.NewPath("spec").Child("consumes").Index(i), c.ObjectReference))
+		}
+		seenRefs[c.ObjectReference] = struct{}{}
+		for env := range c.Maps {
+			if _, ok := seenEnvs[env]; ok {
+				errs = append(errs, field.Duplicate(
+					field.NewPath("spec").Child("consumes").Index(i).Child("maps"), env))
+			}
+			seenEnvs[env] = struct{}{}
 		}
 	}
 	return errs
@@ -82,7 +96,7 @@ func (s *TensegritySpec) validateProduces() (errs field.ErrorList) {
 }
 
 func (s *TensegritySpec) validateDelegates() (errs field.ErrorList) {
-	seenDelegates := make(map[v1.ObjectReference]struct{}, len(s.Delegates))
+	seenDelegates := make(map[corev1.ObjectReference]struct{}, len(s.Delegates))
 	for i, d := range s.Delegates {
 		if len(d.Kind) == 0 {
 			errs = append(errs, field.Required(

@@ -26,17 +26,9 @@ func (s *TensegritySpec) SetDefaultProducesName(name string) {
 
 func (s *TensegritySpec) SetDefaultNamespaceDelegate(namespace string) {
 	if len(s.Delegates) == 0 {
-		s.Delegates = make([]v1.ObjectReference, 0, 1)
+		s.Delegates = append(s.Delegates, v1.ObjectReference{
+			Kind: "Namespace",
+			Name: namespace,
+		})
 	}
-
-	for _, delegate := range s.Delegates {
-		if delegate.Kind == "Namespace" && delegate.Name == namespace {
-			return
-		}
-	}
-
-	s.Delegates = append([]v1.ObjectReference{{
-		Kind: "Namespace",
-		Name: namespace,
-	}}, s.Delegates...)
 }
