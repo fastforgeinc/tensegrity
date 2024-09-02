@@ -151,34 +151,22 @@ func (r *ConsumerReconciler) getKeysFromNamespace(
 				continue
 			}
 
-			obj := new(unstructured.Unstructured)
-			obj.SetKind(produced.Kind)
-			obj.SetName(produced.Name)
-			obj.SetNamespace(namespace.Name)
-			obj.SetAPIVersion(produced.APIVersion)
-			err = config.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+			object, err := r.getObject(ctx, namespace.Name, &produced)
 			if k8serrors.IsNotFound(err) {
 				continue
 			} else if err != nil {
 				return err
 			}
-			jp := jsonpath.New(produced.Key)
-			jp.AllowMissingKeys(false)
-			if err = jp.Parse(produced.FieldPath); err != nil {
+
+			value, err := r.parseValue(object, &produced)
+			if err != nil {
 				return err
-			}
-			buf := new(bytes.Buffer)
-			if err = jp.Execute(buf, obj.Object); err != nil {
-				return err
-			}
-			if buf.Len() == 0 {
-				return nil
 			}
 
 			if produced.Sensitive {
-				sensitiveKeys[env] = buf.String()
+				sensitiveKeys[env] = value
 			} else {
-				keys[env] = buf.String()
+				keys[env] = value
 			}
 			delete(reverseMaps, produced.Key)
 		}
@@ -192,6 +180,50 @@ func (r *ConsumerReconciler) getKeysFromNamespace(
 	}
 
 	return nil
+}
+
+func (r *ConsumerReconciler) getObject(
+	ctx context.Context, namespace string, produced *v1alpha1.ProducedKeyStatus) (*unstructured.Unstructured, error) {
+
+	if len(produced.Kind) == 0 && len(produced.APIVersion) == 0 {
+		return new(unstructured.Unstructured), nil
+	}
+
+	config := reconcilers.RetrieveConfigOrDie(ctx)
+	obj := new(unstructured.Unstructured)
+	obj.SetKind(produced.Kind)
+	obj.SetName(produced.Name)
+	obj.SetNamespace(namespace)
+	obj.SetAPIVersion(produced.APIVersion)
+
+	err := config.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
+
+func (r *ConsumerReconciler) parseValue(
+	obj *unstructured.Unstructured, produced *v1alpha1.ProducedKeyStatus) (string, error) {
+
+	jp := jsonpath.New(produced.Key)
+	jp.AllowMissingKeys(false)
+	if err := jp.Parse(produced.FieldPath); err != nil {
+		return "", errors.Wrap(err, "fieldPath")
+	}
+
+	buf := new(bytes.Buffer)
+	if err := jp.Execute(buf, obj.Object); err != nil {
+		return "", errors.Wrap(err, "fieldPath")
+	}
+
+	value := buf.String()
+	if len(value) == 0 {
+		return "", errors.Wrap(errors.New("value is empty"), "fieldPath")
+	}
+
+	return buf.String(), nil
 }
 
 func (r *ConsumerReconciler) updateKeyStatus(

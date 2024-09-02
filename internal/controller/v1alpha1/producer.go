@@ -55,6 +55,10 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 func (r *ProducerReconciler) getObject(
 	ctx context.Context, namespace string, produces *v1alpha1.ProducesSpec) (*unstructured.Unstructured, error) {
 
+	if len(produces.Kind) == 0 && len(produces.APIVersion) == 0 {
+		return new(unstructured.Unstructured), nil
+	}
+
 	config := reconcilers.RetrieveConfigOrDie(ctx)
 	obj := new(unstructured.Unstructured)
 	obj.SetKind(produces.Kind)
@@ -62,7 +66,7 @@ func (r *ProducerReconciler) getObject(
 	obj.SetNamespace(namespace)
 	obj.SetAPIVersion(produces.APIVersion)
 
-	err := config.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+	err := config.TrackAndGet(ctx, client.ObjectKeyFromObject(obj), obj)
 	if err != nil {
 		return nil, err
 	}

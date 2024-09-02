@@ -30,8 +30,10 @@ import (
 
 	apiargov1alpha1 "github.com/fastforgeinc/tensegrity/api/argo/v1alpha1"
 	apik8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
+	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	controllerargov1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/argo/v1alpha1"
 	controllerk8sv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/k8s/v1alpha1"
+	controllerv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
 
 	"github.com/fastforgeinc/tensegrity/pkg/client"
 
@@ -57,6 +59,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(apiv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(apik8sv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(apiargov1alpha1.AddToScheme(scheme))
 	utilruntime.Must(rolloutsv1alpha1.AddToScheme(scheme))
@@ -99,7 +102,7 @@ func main() {
 		c.NextProtos = []string{"http/1.1"}
 	}
 
-	tlsOpts := []func(*tls.Config){}
+	var tlsOpts []func(*tls.Config)
 	if !enableHTTP2 {
 		tlsOpts = append(tlsOpts, disableHTTP2)
 	}
@@ -125,17 +128,7 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "83f10920.tensegrity.fastforge.io",
-		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
-		// when the Manager ends. This requires the binary to immediately end when the
-		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
-		// speeds up voluntary leader transitions as the new leader don't have to wait
-		// LeaseDuration time first.
-		//
-		// In the default scaffold provided, the program ends immediately after
-		// the manager stops, so would be fine to enable this option. However,
-		// if you are doing or is intended to do any operation such as perform cleanups
-		// after the manager stops then its usage might be unsafe.
-		// LeaderElectionReleaseOnCancel: true,
+		//LeaderElectionReleaseOnCancel: true,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -166,6 +159,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Rollout", "version", "argo/v1alpha1")
 		os.Exit(1)
 	}
+	if err = controllerv1alpha1.NewStaticReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Static", "version", "v1alpha1")
+		os.Exit(1)
+	}
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err = new(apik8sv1alpha1.Deployment).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Deployment")
@@ -179,9 +176,12 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "DaemonSet")
 			os.Exit(1)
 		}
-
 		if err = new(apiargov1alpha1.Rollout).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Rollout")
+			os.Exit(1)
+		}
+		if err = new(apiv1alpha1.Static).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Static")
 			os.Exit(1)
 		}
 	}

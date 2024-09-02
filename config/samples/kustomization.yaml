@@ -1,7 +1,8 @@
 ## Append samples of your project ##
 resources:
-- tensegrity_v1alpha1_deployment_dashboard.yaml
-#- tensegrity_v1alpha1_statefulset.yaml
-#- tensegrity_v1alpha1_daemonset.yaml
-- argo_v1alpha1_rollout.yaml
+- k8s/v1alpha1/deployment_dashboard.yaml
+- k8s/v1alpha1/statefulset.yaml
+- k8s/v1alpha1/daemonset.yaml
+- argo/v1alpha1/rollout.yaml
+- v1alpha1/static.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

@@ -4,5 +4,5 @@ resources:
 - manager.yaml
 images:
 - name: controller
-  newName: example.com/tensegrity
-  newTag: v0.0.1
+  newName: registry.digitalocean.com/fastforge/tensegrity
+  newTag: latest

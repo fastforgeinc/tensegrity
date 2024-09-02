@@ -87,6 +87,7 @@ type ProducedKeyStatus struct {
 	Value *string `json:"value,omitempty"`
 }
 
+// +kubebuilder:skipversion
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Tensegrity is a shared duck type for other reconcilers.
