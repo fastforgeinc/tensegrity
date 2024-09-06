@@ -1,6 +1,8 @@
 package v1alpha1
 
 const (
-	DefaultSecretNamePrefix    = "-tensegrity"
-	DefaultConfigMapNamePrefix = "-tensegrity"
+	DefaultConsumesSecretNamePrefix    = "-consumed"
+	DefaultConsumesConfigMapNamePrefix = "-consumed"
+	DefaultProducesSecretNamePrefix    = "-produced"
+	DefaultProducesConfigMapNamePrefix = "-produced"
 )

@@ -45,7 +45,9 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: install-controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true,maxDescLen=0 webhook paths="./api/k8s/...;./api/argo/...;./internal/controller/..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true,maxDescLen=0 webhook paths="./api/k8s/...;./api/argo/...;./api/v1alpha1/...;./internal/controller/..." output:crd:artifacts:config=config/crd/bases
+	# FIXME: Seems like there is a bug in https://github.com/kubernetes-sigs/controller-tools that creates empty crd manifest for types with skipversion marker, as of now needs clean up and in the future fix?
+	rm config/crd/bases/_.yaml
 
 .PHONY: generate
 generate: install-controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -165,7 +167,7 @@ GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
-CONTROLLER_TOOLS_VERSION ?= v0.15.0
+CONTROLLER_TOOLS_VERSION ?= v0.16.1
 ENVTEST_VERSION ?= release-0.17
 GOLANGCI_LINT_VERSION ?= v1.54.2
 

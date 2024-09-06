@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database
+  labels:
+    app.kubernetes.io/name: static-sample
+type: Opaque
+data:
+  USER: "c2FtcGxlLXVzZXI="
+  PASSWORD: "UEAzM1cwUkQ="
+
+---
+apiVersion: tensegrity.fastforge.io/v1alpha1
+kind: Static
+metadata:
+  labels:
+    app.kubernetes.io/name: tensegrity
+    app.kubernetes.io/managed-by: kustomize
+  name: database
+spec:
+  produces:
+    - key: host
+      fieldPath: 'postgres.testing'
+    - key: port
+      fieldPath: '5432'
+    - key: name
+      fieldPath: 'sample-database'
+    - key: user
+      apiVersion: v1
+      kind: Secret
+      fieldPath: '{ .data.USER }'
+      sensitive: true
+      encoded: true
+    - key: password
+      apiVersion: v1
+      kind: Secret
+      fieldPath: '{ .data.PASSWORD }'
+      sensitive: true
+      encoded: true

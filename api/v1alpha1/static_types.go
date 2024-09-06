@@ -17,23 +17,19 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
-	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DaemonSetSpec defines the desired state of DaemonSet.
-type DaemonSetSpec struct {
-	// DaemonSetSpec is k8s.io/api/apps/v1.DaemonSetSpec type.
-	appsv1.DaemonSetSpec `json:",inline"`
+// StaticSpec defines the desired state of Static
+type StaticSpec struct {
 	// TensegritySpec defines which keys a workload consumes and/or produces, and its delegates.
-	v1alpha1.TensegritySpec `json:",inline"`
+	TensegritySpec `json:",inline"`
 }
 
-// DaemonSetStatus defines the observed state of DaemonSet
-type DaemonSetStatus struct {
+// StaticStatus defines the observed state of Static
+type StaticStatus struct {
 	// Tensegrity status.
-	v1alpha1.TensegrityStatus `json:",inline"`
+	TensegrityStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -45,24 +41,24 @@ type DaemonSetStatus struct {
 // +kubebuilder:printcolumn:name="Consumed Config Map",type=string,JSONPath=`.status.consumedConfigMapName`
 // +kubebuilder:printcolumn:name="Consumed Secret",type=string,JSONPath=`.status.consumedSecretName`
 
-// DaemonSet is a wrapper type of the k8s.io/api/apps/v1.DaemonSet type.
-type DaemonSet struct {
+// Static is the Schema for the statics API
+type Static struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DaemonSetSpec   `json:"spec"`
-	Status DaemonSetStatus `json:"status,omitempty"`
+	Spec   StaticSpec   `json:"spec,omitempty"`
+	Status StaticStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
 
-// DaemonSetList contains a list of DaemonSet.
-type DaemonSetList struct {
+// StaticList contains a list of Static
+type StaticList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []DaemonSet `json:"items"`
+	Items           []Static `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&DaemonSet{}, &DaemonSetList{})
+	SchemeBuilder.Register(&Static{}, &StaticList{})
 }

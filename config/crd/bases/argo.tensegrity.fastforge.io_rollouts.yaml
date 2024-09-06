@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.15.0
+    controller-gen.kubebuilder.io/version: v0.16.1
   name: rollouts.argo.tensegrity.fastforge.io
 spec:
   group: argo.tensegrity.fastforge.io
@@ -18,14 +18,20 @@ spec:
     - jsonPath: .status.produced
       name: Produced
       type: string
+    - jsonPath: .status.producedConfigMapName
+      name: Produced Config Map
+      type: string
+    - jsonPath: .status.producedSecretName
+      name: Produced Secret
+      type: string
     - jsonPath: .status.consumed
       name: Consumed
       type: string
-    - jsonPath: .status.configMapName
-      name: Config Map
+    - jsonPath: .status.consumedConfigMapName
+      name: Consumed Config Map
       type: string
-    - jsonPath: .status.secretName
-      name: Secret
+    - jsonPath: .status.consumedSecretName
+      name: Consumed Secret
       type: string
     name: v1alpha1
     schema:
@@ -48,8 +54,6 @@ spec:
                     format: int32
                     type: integer
                 type: object
-              configMapName:
-                type: string
               consumes:
                 items:
                   properties:
@@ -74,6 +78,10 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
+              consumesConfigMapName:
+                type: string
+              consumesSecretName:
+                type: string
               delegates:
                 items:
                   properties:
@@ -104,6 +112,8 @@ spec:
                   properties:
                     apiVersion:
                       type: string
+                    encoded:
+                      type: boolean
                     fieldPath:
                       type: string
                     key:
@@ -125,6 +135,10 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
+              producesConfigMapName:
+                type: string
+              producesSecretName:
+                type: string
               progressDeadlineAbort:
                 type: boolean
               progressDeadlineSeconds:
@@ -145,8 +159,6 @@ spec:
                     format: int32
                     type: integer
                 type: object
-              secretName:
-                type: string
               selector:
                 properties:
                   matchExpressions:
@@ -1695,6 +1707,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -1799,6 +1812,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -1984,6 +1998,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -2355,6 +2370,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -2459,6 +2475,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -2644,6 +2661,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -3022,6 +3040,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -3126,6 +3145,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -3311,6 +3331,7 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
+                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -4442,9 +4463,9 @@ spec:
                   - type
                   type: object
                 type: array
-              configMapName:
-                type: string
               consumed:
+                type: string
+              consumedConfigMapName:
                 type: string
               consumedKeys:
                 items:
@@ -4496,10 +4517,14 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
+              consumedSecretName:
+                type: string
               observedGeneration:
                 format: int64
                 type: integer
               produced:
+                type: string
+              producedConfigMapName:
                 type: string
               producedKeys:
                 items:
@@ -4534,7 +4559,7 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
-              secretName:
+              producedSecretName:
                 type: string
             type: object
         required:

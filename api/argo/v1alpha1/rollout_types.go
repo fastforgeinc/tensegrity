@@ -75,9 +75,11 @@ type RolloutStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Produced",type=string,JSONPath=`.status.produced`
+// +kubebuilder:printcolumn:name="Produced Config Map",type=string,JSONPath=`.status.producedConfigMapName`
+// +kubebuilder:printcolumn:name="Produced Secret",type=string,JSONPath=`.status.producedSecretName`
 // +kubebuilder:printcolumn:name="Consumed",type=string,JSONPath=`.status.consumed`
-// +kubebuilder:printcolumn:name="Config Map",type=string,JSONPath=`.status.configMapName`
-// +kubebuilder:printcolumn:name="Secret",type=string,JSONPath=`.status.secretName`
+// +kubebuilder:printcolumn:name="Consumed Config Map",type=string,JSONPath=`.status.consumedConfigMapName`
+// +kubebuilder:printcolumn:name="Consumed Secret",type=string,JSONPath=`.status.consumedSecretName`
 
 // Rollout is a wrapper type of github.com/argoproj/argo-rollouts/pkg/apis/rollouts/v1alpha1.Rollout type.
 type Rollout struct {

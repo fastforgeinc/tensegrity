@@ -4,15 +4,27 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func (s *TensegritySpec) SetDefaultSecretName(name string) {
-	if len(s.SecretName) == 0 {
-		s.SecretName = name
+func (s *TensegritySpec) SetDefaultConsumesSecretName(name string) {
+	if len(s.ConsumesSecretName) == 0 {
+		s.ConsumesSecretName = name
 	}
 }
 
-func (s *TensegritySpec) SetDefaultConfigMapName(name string) {
-	if len(s.ConfigMapName) == 0 {
-		s.ConfigMapName = name
+func (s *TensegritySpec) SetDefaultConsumesConfigMapName(name string) {
+	if len(s.ConsumesConfigMapName) == 0 {
+		s.ConsumesConfigMapName = name
+	}
+}
+
+func (s *TensegritySpec) SetDefaultProducesSecretName(name string) {
+	if len(s.ProducesSecretName) == 0 {
+		s.ProducesSecretName = name
+	}
+}
+
+func (s *TensegritySpec) SetDefaultProducesConfigMapName(name string) {
+	if len(s.ProducesConfigMapName) == 0 {
+		s.ProducesConfigMapName = name
 	}
 }
 

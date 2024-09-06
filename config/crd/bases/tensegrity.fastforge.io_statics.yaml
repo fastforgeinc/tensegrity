@@ -1,0 +1,260 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.1
+  name: statics.tensegrity.fastforge.io
+spec:
+  group: tensegrity.fastforge.io
+  names:
+    kind: Static
+    listKind: StaticList
+    plural: statics
+    singular: static
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.produced
+      name: Produced
+      type: string
+    - jsonPath: .status.producedConfigMapName
+      name: Produced Config Map
+      type: string
+    - jsonPath: .status.producedSecretName
+      name: Produced Secret
+      type: string
+    - jsonPath: .status.consumed
+      name: Consumed
+      type: string
+    - jsonPath: .status.consumedConfigMapName
+      name: Consumed Config Map
+      type: string
+    - jsonPath: .status.consumedSecretName
+      name: Consumed Secret
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              consumes:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    fieldPath:
+                      type: string
+                    kind:
+                      type: string
+                    maps:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    resourceVersion:
+                      type: string
+                    uid:
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              consumesConfigMapName:
+                type: string
+              consumesSecretName:
+                type: string
+              delegates:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    fieldPath:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    resourceVersion:
+                      type: string
+                    uid:
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              produces:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    encoded:
+                      type: boolean
+                    fieldPath:
+                      type: string
+                    key:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    resourceVersion:
+                      type: string
+                    sensitive:
+                      type: boolean
+                    uid:
+                      type: string
+                  required:
+                  - key
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              producesConfigMapName:
+                type: string
+              producesSecretName:
+                type: string
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    lastUpdateTime:
+                      format: date-time
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - lastUpdateTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              consumed:
+                type: string
+              consumedConfigMapName:
+                type: string
+              consumedKeys:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    delegate:
+                      properties:
+                        apiVersion:
+                          type: string
+                        fieldPath:
+                          type: string
+                        kind:
+                          type: string
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                        resourceVersion:
+                          type: string
+                        uid:
+                          type: string
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    env:
+                      type: string
+                    fieldPath:
+                      type: string
+                    key:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    reason:
+                      type: string
+                    resourceVersion:
+                      type: string
+                    status:
+                      type: string
+                    uid:
+                      type: string
+                  required:
+                  - env
+                  - key
+                  - status
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              consumedSecretName:
+                type: string
+              observedGeneration:
+                format: int64
+                type: integer
+              produced:
+                type: string
+              producedConfigMapName:
+                type: string
+              producedKeys:
+                items:
+                  properties:
+                    apiVersion:
+                      type: string
+                    fieldPath:
+                      type: string
+                    key:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    reason:
+                      type: string
+                    resourceVersion:
+                      type: string
+                    sensitive:
+                      type: boolean
+                    status:
+                      type: string
+                    uid:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                  - key
+                  - status
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              producedSecretName:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -28,29 +28,22 @@ spec:
       protocol: TCP
       targetPort: http
 ---
-apiVersion: argo.tensegrity.fastforge.io/v1alpha1
-kind: Rollout
+apiVersion: k8s.tensegrity.fastforge.io/v1alpha1
+kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: api
   name: api
 spec:
-  replicas: 3
-  strategy:
-    canary:
-      steps:
-        - setWeight: 20
-        - pause: { }
-        - setWeight: 40
-        - pause: { duration: 10 }
-        - setWeight: 60
-        - pause: { duration: 10 }
-        - setWeight: 80
-        - pause: { duration: 10 }
-  revisionHistoryLimit: 2
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: api
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -58,7 +51,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: registry.k8s.io/e2e-test-images/agnhost:2.38
+          image: registry.k8s.io/e2e-test-images/agnhost:2.39
           command:
             - /agnhost
             - netexec
@@ -75,6 +68,16 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+  consumes:
+    - apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
+      name: database
+      maps:
+        DATABASE_HOST: host
+        DATABASE_PORT: port
+        DATABASE_NAME: name
+        DATABASE_USER: user
+        DATABASE_PASSWORD: password
   produces:
     - key: http-host
       apiVersion: networking.k8s.io/v1
@@ -84,4 +87,3 @@ spec:
       apiVersion: v1
       kind: Service
       fieldPath: '{ .spec.ports[?(@.name=="http")].port }'
-      sensitive: true

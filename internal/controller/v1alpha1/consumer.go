@@ -1,15 +1,13 @@
 package v1alpha1
 
 import (
-	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/client-go/util/jsonpath"
 	"k8s.io/utils/ptr"
 	"reconciler.io/runtime/reconcilers"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -17,6 +15,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
+
+type consumedDelegate struct {
+	v1alpha1.ConsumesSpec
+	Delegate corev1.ObjectReference
+}
 
 func NewConsumerReconciler() *ConsumerReconciler {
 	r := new(ConsumerReconciler)
@@ -33,12 +36,14 @@ func NewConsumerReconciler() *ConsumerReconciler {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
 
 // ConsumerReconciler consumes keys from delegate workloads and puts into stash,
-// for further processing by ConfigMapReconciler and SecretReconciler.
+// for further processing by ConsumerConfigMapReconciler and ConsumerSecretReconciler.
 type ConsumerReconciler struct {
 	workloadReconciler
 }
 
 func (r *ConsumerReconciler) Setup(ctx context.Context, _ ctrl.Manager, builder *builder.Builder) error {
+	builder.Watches(new(corev1.Secret), reconcilers.EnqueueTracked(ctx))
+	builder.Watches(new(corev1.ConfigMap), reconcilers.EnqueueTracked(ctx))
 	builder.Watches(new(corev1.Namespace), reconcilers.EnqueueTracked(ctx))
 	return nil
 }
@@ -58,15 +63,15 @@ func (r *ConsumerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 	}
 
 	if len(keys) > 0 {
-		reconcilers.StashValue(ctx, configMapKeysStashKey, keys)
-		reconcilers.StashValue(ctx, configMapNameStashKey, resource.Spec.ConfigMapName)
-		resource.Status.ConfigMapName = resource.Spec.ConfigMapName
+		reconcilers.StashValue(ctx, consumerConfigMapKeysStashKey, keys)
+		reconcilers.StashValue(ctx, consumerConfigMapNameStashKey, resource.Spec.ConsumesConfigMapName)
+		resource.Status.ConsumedConfigMapName = resource.Spec.ConsumesConfigMapName
 	}
 
 	if len(sensitiveKeys) > 0 {
-		reconcilers.StashValue(ctx, secretKeysStashKey, sensitiveKeys)
-		reconcilers.StashValue(ctx, secretNameStashKey, resource.Spec.SecretName)
-		resource.Status.SecretName = resource.Spec.SecretName
+		reconcilers.StashValue(ctx, consumerSecretKeysStashKey, sensitiveKeys)
+		reconcilers.StashValue(ctx, consumerSecretNameStashKey, resource.Spec.ConsumesSecretName)
+		resource.Status.ConsumedSecretName = resource.Spec.ConsumesSecretName
 	}
 	return nil
 }
@@ -76,11 +81,8 @@ func (r *ConsumerReconciler) getKeys(
 
 	keys = make(map[string]string)
 	sensitiveKeys = make(map[string]string)
-	consumedByRef := make(map[corev1.ObjectReference]struct {
-		v1alpha1.ConsumesSpec
-		Delegate corev1.ObjectReference
-	})
 	consumesByRef := make(map[corev1.ObjectReference]v1alpha1.ConsumesSpec)
+	consumedByRef := make(map[corev1.ObjectReference]consumedDelegate)
 	for _, consumes := range resource.Spec.Consumes {
 		consumesByRef[consumes.ObjectReference] = consumes
 	}
@@ -116,10 +118,7 @@ func (r *ConsumerReconciler) getKeys(
 func (r *ConsumerReconciler) getKeysFromNamespace(
 	ctx context.Context, delegate corev1.ObjectReference,
 	consumesByRef map[corev1.ObjectReference]v1alpha1.ConsumesSpec,
-	consumedByRef map[corev1.ObjectReference]struct {
-		v1alpha1.ConsumesSpec
-		Delegate corev1.ObjectReference
-	},
+	consumedByRef map[corev1.ObjectReference]consumedDelegate,
 	keys, sensitiveKeys map[string]string) error {
 
 	config := reconcilers.RetrieveConfigOrDie(ctx)
@@ -132,63 +131,66 @@ func (r *ConsumerReconciler) getKeysFromNamespace(
 		return err
 	}
 
+ConsumesByRefLoop:
 	for consumesRef, consumes := range consumesByRef {
-		workload := v1alpha1.TensegrityFromRef(consumesRef)
-		workload.SetNamespace(namespace.Name)
-		err = config.TrackAndGet(ctx, client.ObjectKeyFromObject(workload), workload)
+		tensegrity := v1alpha1.TensegrityFromRef(consumesRef)
+		tensegrity.SetNamespace(namespace.Name)
+		err = config.TrackAndGet(ctx, client.ObjectKeyFromObject(tensegrity), tensegrity)
 		if k8serrors.IsNotFound(err) {
 			continue
 		} else if err != nil {
 			return err
 		}
-		reverseMaps := make(map[string]string, len(consumes.Maps))
-		for env, key := range consumes.Maps {
-			reverseMaps[key] = env
-		}
-		for _, produced := range workload.Status.ProducedKeys {
-			env, ok := reverseMaps[produced.Key]
-			if !ok {
-				continue
-			}
 
-			obj := new(unstructured.Unstructured)
-			obj.SetKind(produced.Kind)
-			obj.SetName(produced.Name)
-			obj.SetNamespace(namespace.Name)
-			obj.SetAPIVersion(produced.APIVersion)
-			err = config.Get(ctx, client.ObjectKeyFromObject(obj), obj)
+		configMap := new(corev1.ConfigMap)
+		if len(tensegrity.Status.ProducedConfigMapName) > 0 {
+			configMap.SetName(tensegrity.Status.ProducedConfigMapName)
+			configMap.SetNamespace(namespace.Name)
+			err = config.TrackAndGet(ctx, client.ObjectKeyFromObject(configMap), configMap)
 			if k8serrors.IsNotFound(err) {
 				continue
 			} else if err != nil {
 				return err
 			}
-			jp := jsonpath.New(produced.Key)
-			jp.AllowMissingKeys(false)
-			if err = jp.Parse(produced.FieldPath); err != nil {
-				return err
-			}
-			buf := new(bytes.Buffer)
-			if err = jp.Execute(buf, obj.Object); err != nil {
-				return err
-			}
-			if buf.Len() == 0 {
-				return nil
-			}
+		}
 
-			if produced.Sensitive {
-				sensitiveKeys[env] = buf.String()
-			} else {
-				keys[env] = buf.String()
+		secret := new(corev1.Secret)
+		if len(tensegrity.Status.ProducedSecretName) > 0 {
+			secret.SetName(tensegrity.Status.ProducedSecretName)
+			secret.SetNamespace(namespace.Name)
+			err = config.TrackAndGet(ctx, client.ObjectKeyFromObject(secret), secret)
+			if k8serrors.IsNotFound(err) {
+				continue
+			} else if err != nil {
+				return err
 			}
-			delete(reverseMaps, produced.Key)
 		}
-		if len(reverseMaps) == 0 {
-			consumedByRef[consumesRef] = struct {
-				v1alpha1.ConsumesSpec
-				Delegate corev1.ObjectReference
-			}{ConsumesSpec: consumes, Delegate: delegate}
-			delete(consumesByRef, consumesRef)
+
+		localKeys := make(map[string]string, len(configMap.Data))
+		localSensitiveKeys := make(map[string]string, len(secret.Data))
+		for env, key := range consumes.Maps {
+			if v, ok := configMap.Data[key]; ok {
+				localKeys[env] = v
+				continue
+			}
+			if v, ok := secret.Data[key]; ok {
+				localSensitiveKeys[env] = base64.StdEncoding.EncodeToString(v)
+				continue
+			}
+			continue ConsumesByRefLoop
 		}
+
+		for env, v := range localKeys {
+			keys[env] = v
+		}
+		for env, v := range localSensitiveKeys {
+			sensitiveKeys[env] = v
+		}
+		consumedByRef[consumesRef] = consumedDelegate{
+			ConsumesSpec: consumes,
+			Delegate:     delegate,
+		}
+		delete(consumesByRef, consumesRef)
 	}
 
 	return nil
