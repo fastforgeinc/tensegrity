@@ -18,14 +18,22 @@ package v1alpha1
 
 import (
 	"context"
-	"reconciler.io/runtime/reconcilers"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
+
+	"reconciler.io/runtime/reconcilers"
 
 	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
 )
 
-func NewStaticReconciler(config *reconcilers.Config) *StaticReconciler {
+func NewStaticReconciler(
+	config *reconcilers.Config,
+	producerReconciler *ProducerReconciler,
+	producerSecretReconciler *ProducerSecretReconciler,
+	producerConfigMapReconciler *ProducerConfigMapReconciler) *StaticReconciler {
+
 	return &StaticReconciler{
 		Name: "StaticReconciler",
 		Setup: func(ctx context.Context, _ ctrl.Manager, builder *builder.Builder) error {
@@ -35,7 +43,13 @@ func NewStaticReconciler(config *reconcilers.Config) *StaticReconciler {
 		Config: *config,
 		Reconciler: reconcilers.Sequence[*apiv1alpha1.Static]{
 			&reconcilers.CastResource[*apiv1alpha1.Static, *apiv1alpha1.Tensegrity]{
-				Reconciler: NewProducerReconciler(),
+				Reconciler: producerReconciler,
+			},
+			&reconcilers.CastResource[*apiv1alpha1.Static, *metav1.PartialObjectMetadata]{
+				Reconciler: producerSecretReconciler,
+			},
+			&reconcilers.CastResource[*apiv1alpha1.Static, *metav1.PartialObjectMetadata]{
+				Reconciler: producerConfigMapReconciler,
 			},
 		},
 	}

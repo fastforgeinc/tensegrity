@@ -143,23 +143,62 @@ func main() {
 	}
 
 	ctx := context.Background()
-	if err = controllerk8sv1alpha1.NewDeploymentReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	consumerReconciler := controllerv1alpha1.NewConsumerReconciler()
+	consumerSecretReconciler := controllerv1alpha1.NewConsumerSecretReconciler()
+	consumerConfigMapReconciler := controllerv1alpha1.NewConsumerConfigMapReconciler()
+	producerReconciler := controllerv1alpha1.NewProducerReconciler()
+	producerSecretReconciler := controllerv1alpha1.NewProducerSecretReconciler()
+	producerConfigMapReconciler := controllerv1alpha1.NewProducerConfigMapReconciler()
+
+	if err = controllerk8sv1alpha1.NewDeploymentReconciler(
+		reconcilerConfig,
+		consumerReconciler,
+		consumerSecretReconciler,
+		consumerConfigMapReconciler,
+		producerReconciler,
+		producerSecretReconciler,
+		producerConfigMapReconciler).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Deployment", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
-	if err = controllerk8sv1alpha1.NewStatefulSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	if err = controllerk8sv1alpha1.NewStatefulSetReconciler(
+		reconcilerConfig,
+		consumerReconciler,
+		consumerSecretReconciler,
+		consumerConfigMapReconciler,
+		producerReconciler,
+		producerSecretReconciler,
+		producerConfigMapReconciler).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "StatefulSet", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
-	if err = controllerk8sv1alpha1.NewDaemonSetReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	if err = controllerk8sv1alpha1.NewDaemonSetReconciler(
+		reconcilerConfig,
+		consumerReconciler,
+		consumerSecretReconciler,
+		consumerConfigMapReconciler,
+		producerReconciler,
+		producerSecretReconciler,
+		producerConfigMapReconciler).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "DaemonSet", "version", "k8s/v1alpha1")
 		os.Exit(1)
 	}
-	if err = controllerargov1alpha1.NewRolloutReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	if err = controllerargov1alpha1.NewRolloutReconciler(
+		reconcilerConfig,
+		consumerReconciler,
+		consumerSecretReconciler,
+		consumerConfigMapReconciler,
+		producerReconciler,
+		producerSecretReconciler,
+		producerConfigMapReconciler).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Rollout", "version", "argo/v1alpha1")
 		os.Exit(1)
 	}
-	if err = controllerv1alpha1.NewStaticReconciler(reconcilerConfig).SetupWithManager(ctx, mgr); err != nil {
+	if err = controllerv1alpha1.NewStaticReconciler(
+		reconcilerConfig,
+		producerReconciler,
+		producerSecretReconciler,
+		producerConfigMapReconciler).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Static", "version", "v1alpha1")
 		os.Exit(1)
 	}

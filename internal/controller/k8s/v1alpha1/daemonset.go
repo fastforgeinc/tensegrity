@@ -32,7 +32,15 @@ import (
 	"github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
 )
 
-func NewDaemonSetReconciler(config *reconcilers.Config) *DaemonSetReconciler {
+func NewDaemonSetReconciler(
+	config *reconcilers.Config,
+	consumerReconciler *v1alpha1.ConsumerReconciler,
+	consumerSecretReconciler *v1alpha1.ConsumerSecretReconciler,
+	consumerConfigMapReconciler *v1alpha1.ConsumerConfigMapReconciler,
+	producerReconciler *v1alpha1.ProducerReconciler,
+	producerSecretReconciler *v1alpha1.ProducerSecretReconciler,
+	producerConfigMapReconciler *v1alpha1.ProducerConfigMapReconciler) *DaemonSetReconciler {
+
 	return &DaemonSetReconciler{
 		Name: "DaemonSetReconciler",
 		Setup: func(ctx context.Context, _ ctrl.Manager, builder *builder.Builder) error {
@@ -42,17 +50,23 @@ func NewDaemonSetReconciler(config *reconcilers.Config) *DaemonSetReconciler {
 		Config: *config,
 		Reconciler: reconcilers.Sequence[*k8sv1alpha1.DaemonSet]{
 			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *apiv1alpha1.Tensegrity]{
-				Reconciler: v1alpha1.NewConsumerReconciler(),
+				Reconciler: consumerReconciler,
 			},
 			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *metav1.PartialObjectMetadata]{
-				Reconciler: v1alpha1.NewConfigMapReconciler(),
+				Reconciler: consumerSecretReconciler,
 			},
 			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *metav1.PartialObjectMetadata]{
-				Reconciler: v1alpha1.NewSecretReconciler(),
+				Reconciler: consumerConfigMapReconciler,
 			},
 			NewDaemonSetChildReconciler(),
 			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *apiv1alpha1.Tensegrity]{
-				Reconciler: v1alpha1.NewProducerReconciler(),
+				Reconciler: producerReconciler,
+			},
+			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *metav1.PartialObjectMetadata]{
+				Reconciler: producerSecretReconciler,
+			},
+			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *metav1.PartialObjectMetadata]{
+				Reconciler: producerConfigMapReconciler,
 			},
 		},
 	}
@@ -101,18 +115,18 @@ func (r *DaemonSetChildReconciler) DesiredChild(
 	}
 
 	var envFrom []corev1.EnvFromSource
-	if secret := v1alpha1.SecretFromContext(ctx); secret != nil {
+	if name := v1alpha1.ConsumerSecretNameFromContext(ctx); len(name) > 0 {
 		envFrom = append(envFrom, corev1.EnvFromSource{
 			SecretRef: &corev1.SecretEnvSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: secret.Name},
+				LocalObjectReference: corev1.LocalObjectReference{Name: name},
 			},
 		})
 	}
 
-	if configMap := v1alpha1.ConfigMapFromContext(ctx); configMap != nil {
+	if name := v1alpha1.ConsumerConfigMapNameFromContext(ctx); len(name) > 0 {
 		envFrom = append(envFrom, corev1.EnvFromSource{
 			ConfigMapRef: &corev1.ConfigMapEnvSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: configMap.Name},
+				LocalObjectReference: corev1.LocalObjectReference{Name: name},
 			},
 		})
 	}

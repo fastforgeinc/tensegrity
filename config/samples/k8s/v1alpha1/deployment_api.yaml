@@ -68,6 +68,16 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+  consumes:
+    - apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
+      name: database
+      maps:
+        DATABASE_HOST: host
+        DATABASE_PORT: port
+        DATABASE_NAME: name
+        DATABASE_USER: user
+        DATABASE_PASSWORD: password
   produces:
     - key: http-host
       apiVersion: networking.k8s.io/v1

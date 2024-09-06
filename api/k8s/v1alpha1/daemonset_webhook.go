@@ -38,10 +38,12 @@ var _ webhook.Defaulter = &DaemonSet{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *DaemonSet) Default() {
-	r.Spec.TensegritySpec.SetDefaultSecretName(r.GetName() + v1alpha1.DefaultSecretNamePrefix)
-	r.Spec.TensegritySpec.SetDefaultConfigMapName(r.GetName() + v1alpha1.DefaultConfigMapNamePrefix)
 	r.Spec.TensegritySpec.SetDefaultProducesName(r.GetName())
 	r.Spec.TensegritySpec.SetDefaultNamespaceDelegate(r.GetNamespace())
+	r.Spec.TensegritySpec.SetDefaultConsumesConfigMapName(r.GetName() + v1alpha1.DefaultConsumesConfigMapNamePrefix)
+	r.Spec.TensegritySpec.SetDefaultConsumesSecretName(r.GetName() + v1alpha1.DefaultConsumesSecretNamePrefix)
+	r.Spec.TensegritySpec.SetDefaultProducesConfigMapName(r.GetName() + v1alpha1.DefaultProducesConfigMapNamePrefix)
+	r.Spec.TensegritySpec.SetDefaultProducesSecretName(r.GetName() + v1alpha1.DefaultProducesSecretNamePrefix)
 }
 
 //+kubebuilder:webhook:path=/validate-k8s-tensegrity-fastforge-io-v1alpha1-daemonset,mutating=false,failurePolicy=fail,sideEffects=None,groups=k8s.tensegrity.fastforge.io,resources=daemonsets,verbs=create;update,versions=v1alpha1,name=vdaemonset.kb.io,admissionReviewVersions=v1

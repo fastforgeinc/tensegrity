@@ -84,6 +84,11 @@ func (s *TensegritySpec) validateProduces() (errs field.ErrorList) {
 			errs = append(errs, field.Required(
 				field.NewPath("spec").Child("produces").Index(i).Child("fieldPath"), "valid resource JSONPath"))
 		}
+		if !p.Sensitive && p.Encoded {
+			errs = append(errs, field.Invalid(
+				field.NewPath("spec").Child("produces").Index(i).Child("encoded"),
+				p.FieldPath, "encoded field is allowed only when key is sensitive"))
+		}
 		jp := jsonpath.New(p.Key)
 		jp.AllowMissingKeys(false)
 		if err := jp.Parse(p.FieldPath); err != nil {

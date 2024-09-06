@@ -39,6 +39,8 @@ var _ webhook.Defaulter = &Static{}
 func (r *Static) Default() {
 	r.Spec.TensegritySpec.SetDefaultProducesName(r.GetName())
 	r.Spec.TensegritySpec.SetDefaultNamespaceDelegate(r.GetNamespace())
+	r.Spec.TensegritySpec.SetDefaultProducesConfigMapName(r.GetName() + DefaultProducesConfigMapNamePrefix)
+	r.Spec.TensegritySpec.SetDefaultProducesSecretName(r.GetName() + DefaultProducesSecretNamePrefix)
 }
 
 //+kubebuilder:webhook:path=/validate-tensegrity-fastforge-io-v1alpha1-static,mutating=false,failurePolicy=fail,sideEffects=None,groups=tensegrity.fastforge.io,resources=statics,verbs=create;update,versions=v1alpha1,name=vstatic.kb.io,admissionReviewVersions=v1

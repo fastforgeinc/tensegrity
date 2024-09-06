@@ -3,6 +3,7 @@ package v1alpha1
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	"github.com/pkg/errors"
@@ -37,6 +38,10 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 		return nil
 	}
 
+	var seenError bool
+	keys := make(map[string]string, len(resource.Spec.Produces))
+	sensitiveKeys := make(map[string]string, len(resource.Spec.Produces))
+
 	resource.Status.ProducedKeys = make([]v1alpha1.ProducedKeyStatus, 0, len(resource.Spec.Produces))
 	for _, produces := range resource.Spec.Produces {
 		var err error
@@ -45,10 +50,34 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 		object, err = r.getObject(ctx, resource.Namespace, &produces)
 		if err == nil {
 			value, err = r.parseValue(object, &produces)
+			switch {
+			case produces.Sensitive && produces.Encoded:
+				sensitiveKeys[produces.Key] = value
+			case produces.Sensitive && !produces.Encoded:
+				sensitiveKeys[produces.Key] = base64.StdEncoding.EncodeToString([]byte(value))
+			default:
+				keys[produces.Key] = value
+			}
 		}
 		r.updateKeyStatus(object, resource, &produces, value, err)
+		if err != nil {
+			seenError = true
+		}
 	}
 	r.updateStatus(resource)
+
+	if !seenError && len(keys) > 0 {
+		reconcilers.StashValue(ctx, producerConfigMapKeysStashKey, keys)
+		reconcilers.StashValue(ctx, producerConfigMapNameStashKey, resource.Spec.ProducesConfigMapName)
+		resource.Status.ProducedConfigMapName = resource.Spec.ProducesConfigMapName
+	}
+
+	if !seenError && len(sensitiveKeys) > 0 {
+		reconcilers.StashValue(ctx, producerSecretKeysStashKey, sensitiveKeys)
+		reconcilers.StashValue(ctx, producerSecretNameStashKey, resource.Spec.ProducesSecretName)
+		resource.Status.ProducedSecretName = resource.Spec.ProducesSecretName
+	}
+
 	return nil
 }
 
