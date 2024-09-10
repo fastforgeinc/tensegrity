@@ -24,8 +24,9 @@ import (
 )
 
 const consumerConfigMapReconcilerName = "ConsumerConfigMapReconciler"
-const consumerConfigMapKeysStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumer/configMapKeys"
-const consumerConfigMapNameStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumer/configMapName"
+const consumerConfigMapKeysStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerConfigMapKeys"
+const consumerConfigMapNameStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerConfigMapName"
+const consumerConfigMapVersionStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerConfigMapVersion"
 
 func NewConsumerConfigMapReconciler() *ConsumerConfigMapReconciler {
 	r := new(ConsumerConfigMapReconciler)
@@ -86,8 +87,12 @@ func (r *ConsumerConfigMapReconciler) OurChild(_ *metav1.PartialObjectMetadata, 
 }
 
 func (r *ConsumerConfigMapReconciler) ReflectChildStatusOnParent(
-	_ context.Context, _ *metav1.PartialObjectMetadata, _ *corev1.ConfigMap, _ error) {
-	return
+	ctx context.Context, _ *metav1.PartialObjectMetadata, configMap *corev1.ConfigMap, _ error) {
+	if configMap != nil {
+		if version := configMap.GetResourceVersion(); len(version) > 0 {
+			reconcilers.StashValue(ctx, consumerConfigMapVersionStashKey, version)
+		}
+	}
 }
 
 func ConsumerConfigMapNameFromContext(ctx context.Context) string {
@@ -95,4 +100,11 @@ func ConsumerConfigMapNameFromContext(ctx context.Context) string {
 		return name
 	}
 	return ""
+}
+
+func ConsumerConfigMapAnnotationFromContext(ctx context.Context) (string, string) {
+	if version, ok := reconcilers.RetrieveValue(ctx, consumerConfigMapVersionStashKey).(string); ok {
+		return string(consumerConfigMapVersionStashKey), version
+	}
+	return "", ""
 }

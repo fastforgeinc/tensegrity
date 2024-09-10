@@ -121,6 +121,14 @@ func (r *DaemonSetChildReconciler) DesiredChild(
 				LocalObjectReference: corev1.LocalObjectReference{Name: name},
 			},
 		})
+
+		if key, value := v1alpha1.ConsumerSecretAnnotationFromContext(ctx); len(key) > 0 && len(value) > 0 {
+			child.Annotations[key] = value
+			if child.Spec.Template.Annotations == nil {
+				child.Spec.Template.Annotations = make(map[string]string)
+			}
+			child.Spec.Template.Annotations[key] = value
+		}
 	}
 
 	if name := v1alpha1.ConsumerConfigMapNameFromContext(ctx); len(name) > 0 {
@@ -129,6 +137,14 @@ func (r *DaemonSetChildReconciler) DesiredChild(
 				LocalObjectReference: corev1.LocalObjectReference{Name: name},
 			},
 		})
+
+		if key, value := v1alpha1.ConsumerConfigMapAnnotationFromContext(ctx); len(key) > 0 && len(value) > 0 {
+			child.Annotations[key] = value
+			if child.Spec.Template.Annotations == nil {
+				child.Spec.Template.Annotations = make(map[string]string)
+			}
+			child.Spec.Template.Annotations[key] = value
+		}
 	}
 
 	if len(envFrom) > 0 {
@@ -146,14 +162,13 @@ func (r *DaemonSetChildReconciler) DesiredChild(
 }
 
 func (r *DaemonSetChildReconciler) MergeBeforeUpdate(current, desired *appsv1.DaemonSet) {
+	current.Annotations = reconcilers.MergeMaps(current.Annotations, desired.Annotations)
 	current.Labels = desired.Labels
 	current.Spec = desired.Spec
 }
 
 func (r *DaemonSetChildReconciler) ReflectChildStatusOnParent(
 	_ context.Context, _ *k8sv1alpha1.DaemonSet, _ *appsv1.DaemonSet, _ error) {
-
-	return
 }
 
 type daemonSetChildReconciler = reconcilers.ChildReconciler[

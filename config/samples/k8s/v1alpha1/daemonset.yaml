@@ -1,9 +1,0 @@
-apiVersion: tensegrity.fastforge.io/v1alpha1
-kind: DaemonSet
-metadata:
-  labels:
-    app.kubernetes.io/name: tensegrity
-    app.kubernetes.io/managed-by: kustomize
-  name: daemonset-sample
-spec:
-  # TODO(user): Add fields here
