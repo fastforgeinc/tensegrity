@@ -1,27 +1,27 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: dashboard
+  name: rollout-sample-dashboard
 spec:
   rules:
-    - host: dashboard
+    - host: rollout-sample-dashboard
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: dashboard
+                name: rollout-sample-dashboard
                 port:
                   name: http
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: dashboard
+  name: rollout-sample-dashboard
 spec:
   selector:
-    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/name: rollout-sample-dashboard
   ports:
     - name: http
       port: 3000
@@ -32,32 +32,30 @@ apiVersion: argo.tensegrity.fastforge.io/v1alpha1
 kind: Rollout
 metadata:
   labels:
-    app.kubernetes.io/name: dashboard
-  name: dashboard
+    app.kubernetes.io/name: rollout-sample-dashboard
+  name: rollout-sample-dashboard
 spec:
-  replicas: 1
+  replicas: 4
   strategy:
     canary:
       steps:
-        - setWeight: 20
-        - pause: { }
-        - setWeight: 40
+        - setWeight: 25
         - pause: { duration: 10 }
-        - setWeight: 60
+        - setWeight: 50
         - pause: { duration: 10 }
-        - setWeight: 80
+        - setWeight: 75
         - pause: { duration: 10 }
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: dashboard
+      app.kubernetes.io/name: rollout-sample-dashboard
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: dashboard
+        app.kubernetes.io/name: rollout-sample-dashboard
     spec:
       containers:
-        - name: dashboard
+        - name: rollout-sample-dashboard
           image: registry.k8s.io/e2e-test-images/agnhost:2.39
           command:
             - /agnhost
@@ -85,7 +83,7 @@ spec:
   consumes:
     - apiVersion: argo.tensegrity.fastforge.io/v1alpha1
       kind: Rollout
-      name: api
+      name: rollout-sample-api
       maps:
         API_HOST: http-host
         API_PORT: http-port

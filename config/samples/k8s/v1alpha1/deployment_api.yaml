@@ -1,44 +1,46 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: api
+  name: deployment-sample-api
 spec:
   rules:
-    - host: api
+    - host: deployment-sample-api
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: api
+                name: deployment-sample-api
                 port:
                   name: http
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
-  name: api
+  name: deployment-sample-api
 spec:
   selector:
-    app.kubernetes.io/name: api
+    app.kubernetes.io/name: deployment-sample-api
   ports:
     - name: http
       port: 8080
       protocol: TCP
       targetPort: http
 ---
+
 apiVersion: k8s.tensegrity.fastforge.io/v1alpha1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/name: api
-  name: api
+    app.kubernetes.io/name: deployment-sample-api
+  name: deployment-sample-api
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
-      app.kubernetes.io/name: api
+      app.kubernetes.io/name: deployment-sample-api
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -47,10 +49,10 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: api
+        app.kubernetes.io/name: deployment-sample-api
     spec:
       containers:
-        - name: api
+        - name: deployment-sample-api
           image: registry.k8s.io/e2e-test-images/agnhost:2.39
           command:
             - /agnhost
@@ -60,6 +62,7 @@ spec:
           readinessProbe:
             httpGet:
               port: 8080
+            initialDelaySeconds: 10
           livenessProbe:
             httpGet:
               port: 8080
@@ -68,10 +71,17 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+  delegates:
+    - kind: Namespace
+      name: testing
+    - kind: Namespace
+      name: staging
+    - kind: Namespace
+      name: production
   consumes:
     - apiVersion: tensegrity.fastforge.io/v1alpha1
       kind: Static
-      name: database
+      name: static-sample-database
       maps:
         DATABASE_HOST: host
         DATABASE_PORT: port

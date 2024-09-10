@@ -1,3 +1,21 @@
+/*
+This file is part of the Tensegrity distribution (https://github.com/fastforgeinc/tensegrity)
+Copyright (C) 2024 FastForge Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package v1alpha1
 
 import (
@@ -8,8 +26,9 @@ import (
 )
 
 const consumerConfigMapReconcilerName = "ConsumerConfigMapReconciler"
-const consumerConfigMapKeysStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumer/configMapKeys"
-const consumerConfigMapNameStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumer/configMapName"
+const consumerConfigMapKeysStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerConfigMapKeys"
+const consumerConfigMapNameStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerConfigMapName"
+const consumerConfigMapVersionStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerConfigMapVersion"
 
 func NewConsumerConfigMapReconciler() *ConsumerConfigMapReconciler {
 	r := new(ConsumerConfigMapReconciler)
@@ -70,8 +89,12 @@ func (r *ConsumerConfigMapReconciler) OurChild(_ *metav1.PartialObjectMetadata, 
 }
 
 func (r *ConsumerConfigMapReconciler) ReflectChildStatusOnParent(
-	_ context.Context, _ *metav1.PartialObjectMetadata, _ *corev1.ConfigMap, _ error) {
-	return
+	ctx context.Context, _ *metav1.PartialObjectMetadata, configMap *corev1.ConfigMap, _ error) {
+	if configMap != nil {
+		if version := configMap.GetResourceVersion(); len(version) > 0 {
+			reconcilers.StashValue(ctx, consumerConfigMapVersionStashKey, version)
+		}
+	}
 }
 
 func ConsumerConfigMapNameFromContext(ctx context.Context) string {
@@ -79,4 +102,11 @@ func ConsumerConfigMapNameFromContext(ctx context.Context) string {
 		return name
 	}
 	return ""
+}
+
+func ConsumerConfigMapAnnotationFromContext(ctx context.Context) (string, string) {
+	if version, ok := reconcilers.RetrieveValue(ctx, consumerConfigMapVersionStashKey).(string); ok {
+		return string(consumerConfigMapVersionStashKey), version
+	}
+	return "", ""
 }

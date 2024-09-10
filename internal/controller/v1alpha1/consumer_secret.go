@@ -1,3 +1,21 @@
+/*
+This file is part of the Tensegrity distribution (https://github.com/fastforgeinc/tensegrity)
+Copyright (C) 2024 FastForge Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package v1alpha1
 
 import (
@@ -9,8 +27,9 @@ import (
 )
 
 const consumerSecretReconcilerName = "ConsumerSecretReconciler"
-const consumerSecretKeysStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumer/secretKeys"
-const consumerSecretNameStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumer/secretName"
+const consumerSecretKeysStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerSecretKeys"
+const consumerSecretNameStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerSecretName"
+const consumerSecretVersionStashKey reconcilers.StashKey = "tensegrity.fastforge.io/consumerSecretVersion"
 
 func NewConsumerSecretReconciler() *ConsumerSecretReconciler {
 	r := new(ConsumerSecretReconciler)
@@ -76,8 +95,12 @@ func (r *ConsumerSecretReconciler) OurChild(_ *metav1.PartialObjectMetadata, chi
 }
 
 func (r *ConsumerSecretReconciler) ReflectChildStatusOnParent(
-	_ context.Context, _ *metav1.PartialObjectMetadata, _ *corev1.Secret, _ error) {
-	return
+	ctx context.Context, _ *metav1.PartialObjectMetadata, secret *corev1.Secret, _ error) {
+	if secret != nil {
+		if version := secret.GetResourceVersion(); len(version) > 0 {
+			reconcilers.StashValue(ctx, consumerSecretVersionStashKey, version)
+		}
+	}
 }
 
 func ConsumerSecretNameFromContext(ctx context.Context) string {
@@ -85,4 +108,11 @@ func ConsumerSecretNameFromContext(ctx context.Context) string {
 		return name
 	}
 	return ""
+}
+
+func ConsumerSecretAnnotationFromContext(ctx context.Context) (string, string) {
+	if version, ok := reconcilers.RetrieveValue(ctx, consumerSecretVersionStashKey).(string); ok {
+		return string(consumerSecretVersionStashKey), version
+	}
+	return "", ""
 }
