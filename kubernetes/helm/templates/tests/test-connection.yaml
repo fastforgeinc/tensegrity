@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "tensegrity.fullname" . }}-test-connection"
+  labels:
+    {{- include "tensegrity.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "tensegrity.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
