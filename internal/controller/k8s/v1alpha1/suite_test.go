@@ -20,6 +20,7 @@ package v1alpha1
 
 import (
 	"fmt"
+	controllerv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
 	"path/filepath"
 	"reconciler.io/runtime/reconcilers"
 	"reconciler.io/runtime/tracker"
@@ -51,6 +52,12 @@ var mgr manager.Manager
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconcilerConfig *reconcilers.Config
+var consumerReconciler *controllerv1alpha1.ConsumerReconciler
+var consumerSecretReconciler *controllerv1alpha1.ConsumerSecretReconciler
+var consumerConfigMapReconciler *controllerv1alpha1.ConsumerConfigMapReconciler
+var producerReconcilerInstance *controllerv1alpha1.ProducerReconciler
+var producerSecretReconcilerInstance *controllerv1alpha1.ProducerSecretReconciler
+var producerConfigMapReconcilerInstance *controllerv1alpha1.ProducerConfigMapReconciler
 
 func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -100,6 +107,13 @@ var _ = BeforeSuite(func() {
 		Recorder:  mgr.GetEventRecorderFor("tensegrity"),
 		Tracker:   tracker.New(scheme.Scheme, 1*time.Hour),
 	}
+
+	consumerReconciler = controllerv1alpha1.NewConsumerReconciler()
+	consumerSecretReconciler = controllerv1alpha1.NewConsumerSecretReconciler()
+	consumerConfigMapReconciler = controllerv1alpha1.NewConsumerConfigMapReconciler()
+	producerReconcilerInstance = controllerv1alpha1.NewProducerReconciler()
+	producerSecretReconcilerInstance = controllerv1alpha1.NewProducerSecretReconciler()
+	producerConfigMapReconcilerInstance = controllerv1alpha1.NewProducerConfigMapReconciler()
 })
 
 var _ = AfterSuite(func() {

@@ -70,7 +70,9 @@ var _ = Describe("Static Controller", func() {
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			controllerReconciler := NewStaticReconciler(reconcilerConfig)
+			controllerReconciler := NewStaticReconciler(
+				reconcilerConfig,
+				producerReconcilerInstance, producerSecretReconcilerInstance, producerConfigMapReconcilerInstance)
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})
