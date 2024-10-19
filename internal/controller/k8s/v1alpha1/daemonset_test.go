@@ -81,7 +81,10 @@ var _ = Describe("DaemonSet Controller", func() {
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
-			controllerReconciler := NewDaemonSetReconciler(reconcilerConfig)
+			controllerReconciler := NewDaemonSetReconciler(
+				reconcilerConfig,
+				consumerReconciler, consumerSecretReconciler, consumerConfigMapReconciler,
+				producerReconcilerInstance, producerSecretReconcilerInstance, producerConfigMapReconcilerInstance)
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})

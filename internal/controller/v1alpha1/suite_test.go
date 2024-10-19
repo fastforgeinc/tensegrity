@@ -51,6 +51,9 @@ var mgr manager.Manager
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconcilerConfig *reconcilers.Config
+var producerReconcilerInstance *ProducerReconciler
+var producerSecretReconcilerInstance *ProducerSecretReconciler
+var producerConfigMapReconcilerInstance *ProducerConfigMapReconciler
 
 func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -63,7 +66,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
 
 		// The BinaryAssetsDirectory is only required if you want to run the tests directly
@@ -71,7 +74,7 @@ var _ = BeforeSuite(func() {
 		// default path defined in controller-runtime which is /usr/local/kubebuilder/.
 		// Note that you must have the required binaries setup under the bin directory to perform
 		// the tests directly. When we run make test it will be setup and used automatically.
-		BinaryAssetsDirectory: filepath.Join("..", "..", "bin", "k8s",
+		BinaryAssetsDirectory: filepath.Join("..", "..", "..", "bin", "k8s",
 			fmt.Sprintf("1.29.0-%s-%s", runtime.GOOS, runtime.GOARCH)),
 	}
 
@@ -100,6 +103,10 @@ var _ = BeforeSuite(func() {
 		Recorder:  mgr.GetEventRecorderFor("tensegrity"),
 		Tracker:   tracker.New(scheme.Scheme, 1*time.Hour),
 	}
+
+	producerReconcilerInstance = NewProducerReconciler()
+	producerSecretReconcilerInstance = NewProducerSecretReconciler()
+	producerConfigMapReconcilerInstance = NewProducerConfigMapReconciler()
 })
 
 var _ = AfterSuite(func() {

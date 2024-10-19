@@ -1,5 +1,8 @@
 # Build the manager binary
 FROM golang:1.23 AS builder
+
+LABEL org.opencontainers.image.source=https://github.com/fastforgeinc/tensegrity
+
 ARG TARGETOS
 ARG TARGETARCH
 
