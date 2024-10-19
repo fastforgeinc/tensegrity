@@ -1,0 +1,8 @@
+## Append samples of your project ##
+resources:
+- v1alpha1/static_database.yaml
+- k8s/v1alpha1/deployment_api.yaml
+- k8s/v1alpha1/deployment_dashboard.yaml
+- k8s/v1alpha1/statefulset_api.yaml
+- k8s/v1alpha1/daemonset_api.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

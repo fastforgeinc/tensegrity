@@ -1,0 +1,172 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-tensegrity-fastforge-io-v1alpha1-static
+  failurePolicy: Fail
+  name: mstatic.kb.io
+  rules:
+  - apiGroups:
+    - tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - statics
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-k8s-tensegrity-fastforge-io-v1alpha1-daemonset
+  failurePolicy: Fail
+  name: mdaemonset.kb.io
+  rules:
+  - apiGroups:
+    - k8s.tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - daemonsets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-k8s-tensegrity-fastforge-io-v1alpha1-deployment
+  failurePolicy: Fail
+  name: mdeployment.kb.io
+  rules:
+  - apiGroups:
+    - k8s.tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - deployments
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-k8s-tensegrity-fastforge-io-v1alpha1-statefulset
+  failurePolicy: Fail
+  name: mstatefulset.kb.io
+  rules:
+  - apiGroups:
+    - k8s.tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - statefulsets
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-tensegrity-fastforge-io-v1alpha1-static
+  failurePolicy: Fail
+  name: vstatic.kb.io
+  rules:
+  - apiGroups:
+    - tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - statics
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-k8s-tensegrity-fastforge-io-v1alpha1-daemonset
+  failurePolicy: Fail
+  name: vdaemonset.kb.io
+  rules:
+  - apiGroups:
+    - k8s.tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - daemonsets
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-k8s-tensegrity-fastforge-io-v1alpha1-deployment
+  failurePolicy: Fail
+  name: vdeployment.kb.io
+  rules:
+  - apiGroups:
+    - k8s.tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - deployments
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-k8s-tensegrity-fastforge-io-v1alpha1-statefulset
+  failurePolicy: Fail
+  name: vstatefulset.kb.io
+  rules:
+  - apiGroups:
+    - k8s.tensegrity.fastforge.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - statefulsets
+  sideEffects: None

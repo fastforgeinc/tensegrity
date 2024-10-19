@@ -1,0 +1,93 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: statefulset-sample-api
+spec:
+  rules:
+    - host: statefulset-sample-api
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: statefulset-sample-api
+                port:
+                  name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: statefulset-sample-api
+spec:
+  selector:
+    app.kubernetes.io/name: statefulset-sample-api
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+---
+apiVersion: k8s.tensegrity.fastforge.io/v1alpha1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/name: statefulset-sample-api
+  name: statefulset-sample-api
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: statefulset-sample-api
+  serviceName: statefulset-sample-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: statefulset-sample-api
+    spec:
+      containers:
+        - name: statefulset-sample-api
+          image: registry.k8s.io/e2e-test-images/agnhost:2.39
+          command:
+            - /agnhost
+            - netexec
+            - --http-port
+            - "8080"
+          readinessProbe:
+            httpGet:
+              port: 8080
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet:
+              port: 8080
+            initialDelaySeconds: 10
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+  delegates:
+    - kind: Namespace
+      name: testing
+    - kind: Namespace
+      name: staging
+    - kind: Namespace
+      name: production
+  consumes:
+    - apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
+      name: static-sample-database
+      maps:
+        DATABASE_HOST: host
+        DATABASE_PORT: port
+        DATABASE_NAME: name
+        DATABASE_USER: user
+        DATABASE_PASSWORD: password
+  produces:
+    - key: http-host
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      fieldPath: '{ .spec.rules[0].host }.{ .metadata.namespace }'
+    - key: http-port
+      apiVersion: v1
+      kind: Service
+      fieldPath: '{ .spec.ports[?(@.name=="http")].port }'
