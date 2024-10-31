@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: static-sample-database
+  labels:
+    app.kubernetes.io/name: static-sample-database
+data:
+  USER: "postgres"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: static-sample-database
+  labels:
+    app.kubernetes.io/name: static-sample-database
+type: Opaque
+data:
+  PASSWORD: "UEAzM1cwUkQ="
+---
+apiVersion: tensegrity.fastforge.io/v1alpha1
+kind: Static
+metadata:
+  labels:
+    app.kubernetes.io/name: static-sample-database
+  name: static-sample-database
+spec:
+  produces:
+    - key: host
+      apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
+      fieldPath: 'postgres.testing'
+    - key: port
+      apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
+      fieldPath: '5432'
+    - key: name
+      apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
+      fieldPath: 'sample-database'
+    - key: user
+      apiVersion: v1
+      kind: ConfigMap
+      fieldPath: '{ .data.USER }'
+      sensitive: true
+    - key: password
+      apiVersion: v1
+      kind: Secret
+      fieldPath: '{ .data.PASSWORD }'
+      sensitive: true
+      encoded: true

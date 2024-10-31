@@ -45,8 +45,8 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: install-controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true,maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-	rm config/crd/bases/_.yaml
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true,maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=manifests/crd/bases
+	rm manifests/crd/bases/_.yaml
 
 .PHONY: generate
 generate: install-controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -118,8 +118,14 @@ docker-buildx: ## Build and push docker image for the manager for cross-platform
 .PHONY: build-installer
 build-installer: manifests generate install-kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	mkdir -p dist
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default > dist/install.yaml
+	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build manifests/install > dist/install.yaml
+
+.PHONY: build-installer-monitoring
+build-installer-monitoring: manifests generate install-kustomize ## Generate a consolidated YAML with CRDs and deployment.
+	mkdir -p dist
+	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build manifests/install-monitoring > dist/install-monitoring.yaml
 
 ##@ Deployment
 
@@ -129,26 +135,26 @@ endif
 
 .PHONY: apply-crd
 apply-crd: install-kustomize
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build manifests/crd | $(KUBECTL) apply -f -
 
-.PHONY: apply-default
-apply-default:
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
+.PHONY: apply-install
+apply-install:
+	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build manifests/install | $(KUBECTL) apply -f -
 
 .PHONY: install
 install: manifests apply-crd ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 
 .PHONY: uninstall
 uninstall: manifests install-kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build manifests/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests install-kustomize apply-default ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests install-kustomize apply-install ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 
 .PHONY: undeploy
 undeploy: install-kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build manifests/install | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Dependencies
 
