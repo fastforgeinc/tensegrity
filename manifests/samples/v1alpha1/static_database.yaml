@@ -26,10 +26,16 @@ metadata:
 spec:
   produces:
     - key: host
+      apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
       fieldPath: 'postgres.testing'
     - key: port
+      apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
       fieldPath: '5432'
     - key: name
+      apiVersion: tensegrity.fastforge.io/v1alpha1
+      kind: Static
       fieldPath: 'sample-database'
     - key: user
       apiVersion: v1
