@@ -9,13 +9,13 @@ metadata:
     app.kubernetes.io/created-by: tensegrity
     app.kubernetes.io/part-of: tensegrity
     app.kubernetes.io/managed-by: kustomize
-  name: system
+  name: tensegrity
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controller-manager
-  namespace: system
+  namespace: tensegrity
   labels:
     control-plane: controller-manager
     app.kubernetes.io/name: deployment

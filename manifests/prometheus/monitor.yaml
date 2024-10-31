@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/part-of: tensegrity
     app.kubernetes.io/managed-by: kustomize
   name: controller-manager-metrics-monitor
-  namespace: system
+  namespace: tensegrity
 spec:
   endpoints:
     - path: /metrics
