@@ -54,9 +54,9 @@ spec:
 ```
 
 ## Getting Started
+Install to the `tensegrity` namespace:
 ```shell
-kubectl create namespace tensegrity
-kubectl apply -n tensegrity -f https://github.com/fastforgeinc/tensegrity/releases/latest/download/install.yaml
+kubectl apply -f https://github.com/fastforgeinc/tensegrity/releases/latest/download/install.yaml
 ```
 Follow the full getting started guide to walk through creating and then updating a Tensegrity objects.
 
@@ -95,10 +95,10 @@ make deploy IMG=docker.io/<username>/tensegrity:latest
 privileges or be logged in as admin.
 
 **Create instances of your solution**
-You can apply the samples (examples) from the config/sample:
+You can apply the samples (examples) from the manifests/samples:
 
 ```sh
-kubectl apply -k config/samples/
+kubectl apply -k manifests/samples/
 ```
 
 >**NOTE**: Ensure that the samples has default values to test it out.
@@ -107,7 +107,7 @@ kubectl apply -k config/samples/
 **Delete the instances (CRs) from the cluster:**
 
 ```sh
-kubectl delete -k config/samples/
+kubectl delete -k manifests/samples/
 ```
 
 **Delete the APIs(CRDs) from the cluster:**
@@ -142,7 +142,7 @@ its dependencies.
 Users can just run kubectl apply -f <URL for YAML BUNDLE> to install the project, i.e.:
 
 ```sh
-kubectl apply -n tensegrity -f https://github.com/fastforgeinc/tensegrity/releases/latest/download/install.yaml
+kubectl apply -f https://github.com/fastforgeinc/tensegrity/releases/latest/download/install.yaml
 ```
 
 ## Contributing
