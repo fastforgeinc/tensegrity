@@ -1,19 +1,18 @@
 /*
 This file is part of the Tensegrity distribution (https://github.com/fastforgeinc/tensegrity)
-Copyright (C) 2024 FastForge Inc.
+Copyright (C) 2024 FastForge, Inc.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Tensegrity is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License,
+or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License along with
+this program. If not, see http://www.gnu.org/licenses/.
 */
 
 package v1alpha1
@@ -21,11 +20,13 @@ package v1alpha1
 import (
 	"fmt"
 	"path/filepath"
-	"reconciler.io/runtime/reconcilers"
-	"reconciler.io/runtime/tracker"
 	"runtime"
 	"testing"
 	"time"
+
+	controllerv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
+	"reconciler.io/runtime/reconcilers"
+	"reconciler.io/runtime/tracker"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -51,6 +52,12 @@ var mgr manager.Manager
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconcilerConfig *reconcilers.Config
+var consumerReconciler *controllerv1alpha1.ConsumerReconciler
+var consumerSecretReconciler *controllerv1alpha1.ConsumerSecretReconciler
+var consumerConfigMapReconciler *controllerv1alpha1.ConsumerConfigMapReconciler
+var producerReconcilerInstance *controllerv1alpha1.ProducerReconciler
+var producerSecretReconcilerInstance *controllerv1alpha1.ProducerSecretReconciler
+var producerConfigMapReconcilerInstance *controllerv1alpha1.ProducerConfigMapReconciler
 
 func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -100,6 +107,13 @@ var _ = BeforeSuite(func() {
 		Recorder:  mgr.GetEventRecorderFor("tensegrity"),
 		Tracker:   tracker.New(scheme.Scheme, 1*time.Hour),
 	}
+
+	consumerReconciler = controllerv1alpha1.NewConsumerReconciler()
+	consumerSecretReconciler = controllerv1alpha1.NewConsumerSecretReconciler()
+	consumerConfigMapReconciler = controllerv1alpha1.NewConsumerConfigMapReconciler()
+	producerReconcilerInstance = controllerv1alpha1.NewProducerReconciler()
+	producerSecretReconcilerInstance = controllerv1alpha1.NewProducerSecretReconciler()
+	producerConfigMapReconcilerInstance = controllerv1alpha1.NewProducerConfigMapReconciler()
 })
 
 var _ = AfterSuite(func() {

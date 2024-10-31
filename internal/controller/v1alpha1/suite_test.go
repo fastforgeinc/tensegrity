@@ -1,19 +1,18 @@
 /*
 This file is part of the Tensegrity distribution (https://github.com/fastforgeinc/tensegrity)
-Copyright (C) 2024 FastForge Inc.
+Copyright (C) 2024 FastForge, Inc.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Tensegrity is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License,
+or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License along with
+this program. If not, see http://www.gnu.org/licenses/.
 */
 
 package v1alpha1
@@ -21,11 +20,12 @@ package v1alpha1
 import (
 	"fmt"
 	"path/filepath"
-	"reconciler.io/runtime/reconcilers"
-	"reconciler.io/runtime/tracker"
 	"runtime"
 	"testing"
 	"time"
+
+	"reconciler.io/runtime/reconcilers"
+	"reconciler.io/runtime/tracker"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -51,6 +51,9 @@ var mgr manager.Manager
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconcilerConfig *reconcilers.Config
+var producerReconcilerInstance *ProducerReconciler
+var producerSecretReconcilerInstance *ProducerSecretReconciler
+var producerConfigMapReconcilerInstance *ProducerConfigMapReconciler
 
 func TestControllers(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -63,7 +66,7 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "..", "config", "crd", "bases")},
 		ErrorIfCRDPathMissing: true,
 
 		// The BinaryAssetsDirectory is only required if you want to run the tests directly
@@ -71,7 +74,7 @@ var _ = BeforeSuite(func() {
 		// default path defined in controller-runtime which is /usr/local/kubebuilder/.
 		// Note that you must have the required binaries setup under the bin directory to perform
 		// the tests directly. When we run make test it will be setup and used automatically.
-		BinaryAssetsDirectory: filepath.Join("..", "..", "bin", "k8s",
+		BinaryAssetsDirectory: filepath.Join("..", "..", "..", "bin", "k8s",
 			fmt.Sprintf("1.29.0-%s-%s", runtime.GOOS, runtime.GOARCH)),
 	}
 
@@ -100,6 +103,10 @@ var _ = BeforeSuite(func() {
 		Recorder:  mgr.GetEventRecorderFor("tensegrity"),
 		Tracker:   tracker.New(scheme.Scheme, 1*time.Hour),
 	}
+
+	producerReconcilerInstance = NewProducerReconciler()
+	producerSecretReconcilerInstance = NewProducerSecretReconciler()
+	producerConfigMapReconcilerInstance = NewProducerConfigMapReconciler()
 })
 
 var _ = AfterSuite(func() {
