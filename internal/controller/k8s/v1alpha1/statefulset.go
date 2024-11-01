@@ -46,6 +46,9 @@ func NewStatefulSetReconciler(
 		Name:   "StatefulSetReconciler",
 		Config: *config,
 		Setup: func(ctx context.Context, _ ctrl.Manager, builder *builder.Builder) error {
+			builder.Watches(new(apiv1alpha1.Static), reconcilers.EnqueueTracked(ctx))
+			builder.Watches(new(k8sv1alpha1.DaemonSet), reconcilers.EnqueueTracked(ctx))
+			builder.Watches(new(k8sv1alpha1.Deployment), reconcilers.EnqueueTracked(ctx))
 			builder.Watches(new(k8sv1alpha1.StatefulSet), reconcilers.EnqueueTracked(ctx))
 			return nil
 		},
