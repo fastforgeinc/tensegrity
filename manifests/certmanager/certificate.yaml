@@ -12,7 +12,7 @@ metadata:
     app.kubernetes.io/part-of: tensegrity
     app.kubernetes.io/managed-by: kustomize
   name: selfsigned-issuer
-  namespace: tensegrity
+  namespace: system
 spec:
   selfSigned: {}
 ---
@@ -27,7 +27,7 @@ metadata:
     app.kubernetes.io/part-of: tensegrity
     app.kubernetes.io/managed-by: kustomize
   name: serving-cert  # this name should match the one appeared in kustomizeconfig.yaml
-  namespace: tensegrity
+  namespace: system
 spec:
   # SERVICE_NAME and SERVICE_NAMESPACE will be substituted by kustomize
   dnsNames:

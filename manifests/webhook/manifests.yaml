@@ -9,7 +9,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /mutate-tensegrity-fastforge-io-v1alpha1-static
   failurePolicy: Fail
   name: mstatic.kb.io
@@ -29,7 +29,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /mutate-k8s-tensegrity-fastforge-io-v1alpha1-daemonset
   failurePolicy: Fail
   name: mdaemonset.kb.io
@@ -49,7 +49,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /mutate-k8s-tensegrity-fastforge-io-v1alpha1-deployment
   failurePolicy: Fail
   name: mdeployment.kb.io
@@ -69,7 +69,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /mutate-k8s-tensegrity-fastforge-io-v1alpha1-statefulset
   failurePolicy: Fail
   name: mstatefulset.kb.io
@@ -95,7 +95,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /validate-tensegrity-fastforge-io-v1alpha1-static
   failurePolicy: Fail
   name: vstatic.kb.io
@@ -115,7 +115,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /validate-k8s-tensegrity-fastforge-io-v1alpha1-daemonset
   failurePolicy: Fail
   name: vdaemonset.kb.io
@@ -135,7 +135,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /validate-k8s-tensegrity-fastforge-io-v1alpha1-deployment
   failurePolicy: Fail
   name: vdeployment.kb.io
@@ -155,7 +155,7 @@ webhooks:
   clientConfig:
     service:
       name: webhook-service
-      namespace: tensegrity
+      namespace: system
       path: /validate-k8s-tensegrity-fastforge-io-v1alpha1-statefulset
   failurePolicy: Fail
   name: vstatefulset.kb.io

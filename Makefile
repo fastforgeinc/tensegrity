@@ -1,5 +1,6 @@
 # Image URL to use all building/pushing image targets
-IMG ?= ghcr.io/fastforgeinc/tensegrity:latest
+IMG_TAG ?= latest
+IMG ?= ghcr.io/fastforgeinc/tensegrity:${IMG_TAG}
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
 
@@ -45,7 +46,7 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: install-controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true,maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=manifests/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true,maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=manifests/crd/bases output:webhook:artifacts:config=manifests/webhook output:rbac:artifacts:config=manifests/rbac
 	rm manifests/crd/bases/_.yaml
 
 .PHONY: generate
