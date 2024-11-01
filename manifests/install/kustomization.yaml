@@ -1,3 +1,4 @@
+namespace: tensegrity
 namePrefix: tensegrity-
 
 resources:

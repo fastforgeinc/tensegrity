@@ -57,6 +57,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           push: true
           provenance: false
           sbom: false
@@ -80,8 +81,8 @@ jobs:
       -
         name: Generate release artifacts
         run: |
-          - make build-installer IMG=${{ github.ref_name }}
-          - make build-installer-monitoring IMG=${{ github.ref_name }}
+          make build-installer IMG_TAG=${{ github.ref_name }}
+          make build-installer-monitoring IMG_TAG=${{ github.ref_name }}
       -
         name: Draft release
         uses: softprops/action-gh-release@v2.0.9
