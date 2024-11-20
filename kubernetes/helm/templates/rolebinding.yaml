@@ -3,11 +3,9 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: tensegrity
     app.kubernetes.io/instance: leader-election-rolebinding
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: rolebinding
     app.kubernetes.io/part-of: tensegrity
+    {{- include "tensegrity.labels" . | nindent 4 }}
   name: {{ .Release.Name }}-leader-election-rolebinding
   namespace: {{ .Release.Namespace }}
 roleRef:

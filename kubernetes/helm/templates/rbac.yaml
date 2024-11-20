@@ -3,12 +3,7 @@ kind: Role
 metadata:
   labels:
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: tensegrity
-    app.kubernetes.io/instance: leader-election-role
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: role
-    app.kubernetes.io/part-of: tensegrity
-  namespace: {{ .Release.Namespace }}
+    {{- include "tensegrity.labels" . | nindent 4 }}
   name: {{ .Release.Name }}-leader-election-role
 rules:
 - apiGroups:

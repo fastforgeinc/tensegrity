@@ -3,22 +3,19 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: tensegrity
-    app.kubernetes.io/instance: controller-manager
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: deployment
-    app.kubernetes.io/part-of: tensegrity
     control-plane: controller-manager
+    {{- include "tensegrity.labels" . | nindent 4 }}
   name: {{ .Release.Name }}-controller-manager
   namespace: {{ .Release.Namespace }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
-  progressDeadlineSeconds: 600
-  revisionHistoryLimit: 10
+  progressDeadlineSeconds: {{ .Values.progressDeadlineSeconds }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
+      {{- include "tensegrity.selectorLabels" . | nindent 6 }}
       control-plane: controller-manager
   strategy:
     rollingUpdate:
@@ -29,65 +26,88 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
+        {{- with .Values.tensegrity.podAnnotations }}
+        annotations:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      creationTimestamp: null
       labels:
         control-plane: controller-manager
+        {{- include "tensegrity.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
+      {{- with .Values.tensegrity.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccount: {{ include "tensegrity.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
       containers:
-      - args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
-        - --logtostderr=true
-        - --v=0
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0
-        imagePullPolicy: IfNotPresent
-        name: kube-rbac-proxy
-        ports:
-        - containerPort: 8443
-          name: https
-          protocol: TCP
-        resources:
-          {{- toYaml .Values.resources | nindent 12 }}
-        securityContext:
-          {{- toYaml .Values.securityContext | nindent 12 }}
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
       - args:
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
         command:
         - /manager
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: "{{ .Values.tensegrity.image.repository }}:{{ .Values.tensegrity.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.tensegrity.image.pullPolicy }}
         livenessProbe:
-          {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- toYaml .Values.tensegrity.livenessProbe | nindent 12 }}
         name: manager
+        ports:
+        - containerPort: {{ .values.tensegrity.service.port }}
+          name: {{ .Values.tensegrity.service.name }}
+          protocol: {{ .Values.tensegrity.service.protocol }}
         readinessProbe:
-          {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- toYaml .Values.tensegrity.readinessProbe | nindent 12 }}
         resources:
-          limits:
-            cpu: 500m
-            memory: 128Mi
-          requests:
-            cpu: 10m
-            memory: 64Mi
+          {{- toYaml .Values.tensegrity.resources | nindent 12 }}
         securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-      dnsPolicy: ClusterFirst
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
+          {{ toYaml .Values.tensegrity.podSecurityContext | nindent 12 }}
+        terminationMessagePath: {{ .Values.tensegrity.terminationMessagePath }}
+        terminationMessagePolicy: {{ .Values.tensegrity.terminationMessagePolicy }}
+        {{- with .Values.tensegrity.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=0
+        image: "{{ .Values.rbac-proxy.image.repository }}:{{ .Values.rbac-proxy.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.rbac-proxy.image.pullPolicy }}
+        name: {{ .Values.rbac-proxy.name }}
+        ports:
+        - containerPort: {{ .Values.rbac-proxy.service.port }}
+          name: {{ .Values.rbac-proxy.service.name }}
+          protocol: {{ .Values.rbac-proxy.service.protocol }}
+        resources:
+          {{- toYaml .Values.rbac-proxy.resources | nindent 12 }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        terminationMessagePath: {{ .Values.rbac-proxy.terminationMessagePath }}
+        terminationMessagePolicy: {{ .Values.rbac-proxy.terminationMessagePolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      restartPolicy: {{ .Values.restartPolicy }}
+      schedulerName: {{ .Values.schedulerName }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.volumes }}
+      volumes:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      restartPolicy: Always
-      schedulerName: default-scheduler
-      securityContext:
-        runAsNonRoot: true
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      serviceAccount: {{ include "tensegrity.serviceAccountName" . }}
-      serviceAccountName: {{ include "tensegrity.serviceAccountName" . }}
-      terminationGracePeriodSeconds: 10
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

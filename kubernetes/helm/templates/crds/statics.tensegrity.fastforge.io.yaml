@@ -2,12 +2,28 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
+    cert-manager.io/inject-ca-from: tensegrity/tensegrity-serving-cert
     controller-gen.kubebuilder.io/version: v0.16.1
-  generation: 1
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apiextensions.k8s.io/v1","kind":"CustomResourceDefinition","metadata":{"annotations":{"cert-manager.io/inject-ca-from":"tensegrity/tensegrity-serving-cert","controller-gen.kubebuilder.io/version":"v0.16.1"},"name":"statics.tensegrity.fastforge.io"},"spec":{"conversion":{"strategy":"Webhook","webhook":{"clientConfig":{"service":{"name":"tensegrity-webhook-service","namespace":"tensegrity","path":"/convert"}},"conversionReviewVersions":["v1"]}},"group":"tensegrity.fastforge.io","names":{"kind":"Static","listKind":"StaticList","plural":"statics","singular":"static"},"scope":"Namespaced","versions":[{"additionalPrinterColumns":[{"jsonPath":".status.produced","name":"Produced","type":"string"},{"jsonPath":".status.producedConfigMapName","name":"Produced Config Map","type":"string"},{"jsonPath":".status.producedSecretName","name":"Produced Secret","type":"string"},{"jsonPath":".status.consumed","name":"Consumed","type":"string"},{"jsonPath":".status.consumedConfigMapName","name":"Consumed Config Map","type":"string"},{"jsonPath":".status.consumedSecretName","name":"Consumed Secret","type":"string"}],"name":"v1alpha1","schema":{"openAPIV3Schema":{"properties":{"apiVersion":{"type":"string"},"kind":{"type":"string"},"metadata":{"type":"object"},"spec":{"properties":{"consumes":{"items":{"properties":{"apiVersion":{"type":"string"},"fieldPath":{"type":"string"},"kind":{"type":"string"},"maps":{"additionalProperties":{"type":"string"},"type":"object"},"name":{"type":"string"},"namespace":{"type":"string"},"resourceVersion":{"type":"string"},"uid":{"type":"string"}},"type":"object","x-kubernetes-map-type":"atomic"},"type":"array"},"consumesConfigMapName":{"type":"string"},"consumesSecretName":{"type":"string"},"delegates":{"items":{"properties":{"apiVersion":{"type":"string"},"fieldPath":{"type":"string"},"kind":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"resourceVersion":{"type":"string"},"uid":{"type":"string"}},"type":"object","x-kubernetes-map-type":"atomic"},"type":"array"},"produces":{"items":{"properties":{"apiVersion":{"type":"string"},"encoded":{"type":"boolean"},"fieldPath":{"type":"string"},"key":{"type":"string"},"kind":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"resourceVersion":{"type":"string"},"sensitive":{"type":"boolean"},"uid":{"type":"string"}},"required":["key"],"type":"object","x-kubernetes-map-type":"atomic"},"type":"array"},"producesConfigMapName":{"type":"string"},"producesSecretName":{"type":"string"}},"type":"object"},"status":{"properties":{"conditions":{"items":{"properties":{"lastTransitionTime":{"format":"date-time","type":"string"},"lastUpdateTime":{"format":"date-time","type":"string"},"message":{"type":"string"},"reason":{"type":"string"},"status":{"type":"string"},"type":{"type":"string"}},"required":["lastTransitionTime","lastUpdateTime","message","reason","status","type"],"type":"object"},"type":"array"},"consumed":{"type":"string"},"consumedConfigMapName":{"type":"string"},"consumedKeys":{"items":{"properties":{"apiVersion":{"type":"string"},"delegate":{"properties":{"apiVersion":{"type":"string"},"fieldPath":{"type":"string"},"kind":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"resourceVersion":{"type":"string"},"uid":{"type":"string"}},"type":"object","x-kubernetes-map-type":"atomic"},"env":{"type":"string"},"fieldPath":{"type":"string"},"key":{"type":"string"},"kind":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"reason":{"type":"string"},"resourceVersion":{"type":"string"},"status":{"type":"string"},"uid":{"type":"string"}},"required":["env","key","status"],"type":"object","x-kubernetes-map-type":"atomic"},"type":"array"},"consumedSecretName":{"type":"string"},"observedGeneration":{"format":"int64","type":"integer"},"produced":{"type":"string"},"producedConfigMapName":{"type":"string"},"producedKeys":{"items":{"properties":{"apiVersion":{"type":"string"},"fieldPath":{"type":"string"},"key":{"type":"string"},"kind":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"reason":{"type":"string"},"resourceVersion":{"type":"string"},"sensitive":{"type":"boolean"},"status":{"type":"string"},"uid":{"type":"string"},"value":{"type":"string"}},"required":["key","status"],"type":"object","x-kubernetes-map-type":"atomic"},"type":"array"},"producedSecretName":{"type":"string"}},"type":"object"}},"type":"object"}},"served":true,"storage":true,"subresources":{"status":{}}}]}}
+  creationTimestamp: "2024-11-17T16:50:08Z"
+  generation: 2
   name: statics.tensegrity.fastforge.io
+  resourceVersion: "1068"
+  uid: ca75b4d8-2f63-4d6d-84cb-0446731915c0
 spec:
   conversion:
-    strategy: None
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURIakNDQWdhZ0F3SUJBZ0lRTUFRNDRwc21ua1BUSG1rdnlGZkg0REFOQmdrcWhraUc5dzBCQVFzRkFEQUEKTUI0WERUSTBNVEV4TnpFMk5UQXdPRm9YRFRJMU1ESXhOVEUyTlRBd09Gb3dBRENDQVNJd0RRWUpLb1pJaHZjTgpBUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTHpjT1pqWTU0djRNV0pPc1F1U1NDc1J5OVFLS2FlTEM3dDJOWHd3CmtJdVIvN3BmWVM1TmNJTUcxVlVLNC95V0ZBeUpDbGpDSzRSQmJ3ZWRxc29DeE15QjFTeUEreXVPL0htMElFNGIKUlZyR3oyQkh2SCtaY09KSy9yRlFEODRZaGFrQVBINHpRRHFPR2FGcEQzODlYTWhZd3RWRDk5SkdEOE4xUzc0RQpaUk5pUnNPU0MwTkR4YldzWHVuSCs3ZDJGUnRtb3pFYUFEdkNwRU5jVk5ESHdCR0RwWUhWYlBUUk8yMFRiMTVhCktoMnhZZFFxRGVpT2krNDdiaUk4cmo0RnNCUU55NXZCUDQvejRvRkdHOVZDU1JGZWtyVGFlL3R5UEFLV2FKM2kKTTZFR0VLNFZHdzUram9Fb3FFUTM0TmlJTUgzc0kyajdhdWNiMmZ1UENsZlZBWE1DQXdFQUFhT0JrekNCa0RBTwpCZ05WSFE4QkFmOEVCQU1DQmFBd0RBWURWUjBUQVFIL0JBSXdBREJ3QmdOVkhSRUJBZjhFWmpCa2dpbDBaVzV6ClpXZHlhWFI1TFhkbFltaHZiMnN0YzJWeWRtbGpaUzUwWlc1elpXZHlhWFI1TG5OMlk0STNkR1Z1YzJWbmNtbDAKZVMxM1pXSm9iMjlyTFhObGNuWnBZMlV1ZEdWdWMyVm5jbWwwZVM1emRtTXVZMngxYzNSbGNpNXNiMk5oYkRBTgpCZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUFmSDJKczZBUEI2TTVja0d6TWdKUy9xdkpqREhKREZoT3pGaExwZjVYCnc3OTVXdnUyNmhrdzRUUS84M1BOL25ydGlvVURScVlnMzExL3hNcDhwWG5lUUZ6ZzY0NXJUTEpwWmhWMWV2VkkKcVpuYWpBZkN4QUZ1UnZ0MDExSU40dFRZT20vb3JFSlN5cTA1M2ZwY1dESlgyQkpUT3cyTHh1cWhvTndBQmp1bgp0NGRKR0dHanp0c0w2M0RERC82eDVrNHl0djdmUFZDU3gyL3FTRzJ3RmNJcDRYMWx0Ri9GSmVwYzVxalEycUI4CjQ2Zy9PSFY1TGhVWkhlVnJsUXVwanlyWVhKTm4wcnpVZ29za0pVa01sRWVnTWV1aXE2YW1uRm9FT29pMkFPN2gKWWMxcGlISWRoYUlqakY3L3g0UU11aFZtZ1ZSV01tSUt1UWhlZUxUYmNzOGdNdz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        service:
+          name: tensegrity-webhook-service
+          namespace: tensegrity
+          path: /convert
+          port: 443
+      conversionReviewVersions:
+      - v1
   group: tensegrity.fastforge.io
   names:
     kind: Static
@@ -267,12 +283,12 @@ status:
     plural: statics
     singular: static
   conditions:
-  - lastTransitionTime: "2024-09-13T14:15:15Z"
+  - lastTransitionTime: "2024-11-17T16:50:08Z"
     message: no conflicts found
     reason: NoConflicts
     status: "True"
     type: NamesAccepted
-  - lastTransitionTime: "2024-09-13T14:15:15Z"
+  - lastTransitionTime: "2024-11-17T16:50:08Z"
     message: the initial names have been accepted
     reason: InitialNamesAccepted
     status: "True"
