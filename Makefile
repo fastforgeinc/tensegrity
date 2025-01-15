@@ -46,7 +46,7 @@ help: ## Display this help.
 
 .PHONY: manifests
 manifests: install-controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true,maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=manifests/crd/bases output:webhook:artifacts:config=manifests/webhook output:rbac:artifacts:config=manifests/rbac
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./..." output:crd:artifacts:config=manifests/crd/bases output:webhook:artifacts:config=manifests/webhook output:rbac:artifacts:config=manifests/rbac
 	rm manifests/crd/bases/_.yaml
 
 .PHONY: generate
@@ -121,41 +121,43 @@ build-installer: manifests generate install-kustomize ## Generate a consolidated
 	mkdir -p dist
 	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build manifests/install > dist/install.yaml
+	$(YQ) 'del(.. | select(has("description")).description)' -i dist/install.yaml
 
 .PHONY: build-installer-monitoring
 build-installer-monitoring: manifests generate install-kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	mkdir -p dist
 	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build manifests/install-monitoring > dist/install-monitoring.yaml
+	$(YQ) 'del(.. | select(has("description")).description)' -i dist/install-monitoring.yaml
 
 ##@ Deployment
 
 ifndef ignore-not-found
-  ignore-not-found = false
+  ignore-not-found = true
 endif
 
 .PHONY: apply-crd
-apply-crd: install-kustomize
-	$(KUSTOMIZE) build manifests/crd | $(KUBECTL) apply -f -
+apply-crd: install-kustomize install-yq
+	$(KUSTOMIZE) build manifests/crd | $(YQ) 'del(.. | select(has("description")).description)' | $(KUBECTL) apply -f -
 
 .PHONY: apply-install
-apply-install:
+apply-install: install-kustomize install-yq
 	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build manifests/install | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build manifests/install | $(YQ) 'del(.. | select(has("description")).description)' | $(KUBECTL) apply -f -
 
 .PHONY: install
 install: manifests apply-crd ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 
 .PHONY: uninstall
-uninstall: manifests install-kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build manifests/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+uninstall: manifests install-kustomize install-yq ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build manifests/crd | $(YQ) 'del(.. | select(has("description")).description)' | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
 deploy: manifests install-kustomize apply-install ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 
 .PHONY: undeploy
-undeploy: install-kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build manifests/install | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+undeploy: install-kustomize install-yq ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build manifests/install | $(YQ) 'del(.. | select(has("description")).description)' | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 ##@ Dependencies
 
@@ -170,12 +172,14 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+YQ = $(LOCALBIN)/yq-$(YQ_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.16.1
 ENVTEST_VERSION ?= release-0.17
 GOLANGCI_LINT_VERSION ?= v1.54.2
+YQ_VERSION ?= v4.45.1
 
 .PHONY: install-kustomize
 install-kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -196,6 +200,11 @@ $(ENVTEST): $(LOCALBIN)
 install-golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
+
+.PHONY: install-yq
+install-yq: $(YQ)
+$(YQ): $(LOCALBIN)
+	$(call go-install-tool,$(YQ),github.com/mikefarah/yq/v4,${YQ_VERSION})
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
