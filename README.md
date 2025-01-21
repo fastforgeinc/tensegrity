@@ -54,15 +54,31 @@ spec:
 ```
 
 ## Getting Started
+Tensegrity relies on the cert-manager component to function correctly within the cluster. Specifically, it leverages the mutating webhook configuration and validation webhook configuration provided by cert-manager to ensure seamless integration and operation. However, _this dependency is planned for deprecation in future releases_, with efforts underway to eliminate the reliance on cert-manager, enabling a more streamlined and independent deployment process.
+
+**Optional:**
+If cert-manager is not already installed in your Kubernetes cluster, you can install it using the following command:
+```shell
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.3/cert-manager.yaml
+```
+
+This command applies the necessary configuration files to set up cert-manager in your cluster. Please ensure that your cluster meets the prerequisites for cert-manager installation and that you adjust the version (v1.12.0 in this example) as needed for compatibility with your environment.
+
+### Installation Prerequisites
+- kubectl version v1.11.3+.
+- Access to a Kubernetes v1.11.3+ cluster.
+- cert-manager v1.7+
+
+**Tensegrity static install**
+
 Install to the `tensegrity` namespace:
 ```shell
 kubectl apply -f https://github.com/fastforgeinc/tensegrity/releases/latest/download/install.yaml
 ```
+
 Follow the full getting started guide to walk through creating and then updating a Tensegrity objects.
 
-## Development
-
-### Prerequisites
+### Development Prerequisites
 - go version v1.23.0+
 - docker version 17.03+.
 - kubectl version v1.11.3+.
