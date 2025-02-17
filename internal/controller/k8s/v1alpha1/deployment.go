@@ -35,6 +35,7 @@ import (
 
 func NewDeploymentReconciler(
 	config *reconcilers.Config,
+	validationReconciler *v1alpha1.ValidationReconciler,
 	consumerReconciler *v1alpha1.ConsumerReconciler,
 	consumerSecretReconciler *v1alpha1.ConsumerSecretReconciler,
 	consumerConfigMapReconciler *v1alpha1.ConsumerConfigMapReconciler,
@@ -53,6 +54,9 @@ func NewDeploymentReconciler(
 		},
 		Config: *config,
 		Reconciler: reconcilers.Sequence[*k8sv1alpha1.Deployment]{
+			&reconcilers.CastResource[*k8sv1alpha1.Deployment, *apiv1alpha1.Tensegrity]{
+				Reconciler: validationReconciler,
+			},
 			&reconcilers.CastResource[*k8sv1alpha1.Deployment, *apiv1alpha1.Tensegrity]{
 				Reconciler: consumerReconciler,
 			},

@@ -32,6 +32,7 @@ import (
 
 func NewStaticReconciler(
 	config *reconcilers.Config,
+	validationReconciler *ValidationReconciler,
 	producerReconciler *ProducerReconciler,
 	producerSecretReconciler *ProducerSecretReconciler,
 	producerConfigMapReconciler *ProducerConfigMapReconciler) *StaticReconciler {
@@ -47,6 +48,9 @@ func NewStaticReconciler(
 		},
 		Config: *config,
 		Reconciler: reconcilers.Sequence[*apiv1alpha1.Static]{
+			&reconcilers.CastResource[*apiv1alpha1.Static, *apiv1alpha1.Tensegrity]{
+				Reconciler: validationReconciler,
+			},
 			&reconcilers.CastResource[*apiv1alpha1.Static, *apiv1alpha1.Tensegrity]{
 				Reconciler: producerReconciler,
 			},

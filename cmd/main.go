@@ -65,6 +65,7 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var enableWebhooks bool
 	var certDir string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -76,6 +77,7 @@ func main() {
 		"If set the metrics endpoint is served securely")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+	flag.BoolVar(&enableWebhooks, "enable-webhooks", false, "If set, webhook validation will be enabled")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -94,16 +96,7 @@ func main() {
 		tlsOpts = append(tlsOpts, disableHTTP2)
 	}
 
-	webhookOptions := webhook.Options{
-		TLSOpts: tlsOpts,
-	}
-	if len(certDir) > 0 {
-		webhookOptions.CertDir = certDir
-	}
-
-	webhookServer := webhook.NewServer(webhookOptions)
-
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgrOptions := ctrl.Options{
 		Scheme:    scheme,
 		NewClient: client.New,
 		Metrics: metricsserver.Options{
@@ -111,12 +104,25 @@ func main() {
 			SecureServing: secureMetrics,
 			TLSOpts:       tlsOpts,
 		},
-		WebhookServer:                 webhookServer,
 		HealthProbeBindAddress:        probeAddr,
 		LeaderElection:                enableLeaderElection,
 		LeaderElectionID:              "83f10920.tensegrity.fastforge.io",
 		LeaderElectionReleaseOnCancel: true,
-	})
+	}
+
+	if enableWebhooks {
+		webhookOptions := webhook.Options{
+			TLSOpts: tlsOpts,
+		}
+		if len(certDir) > 0 {
+			webhookOptions.CertDir = certDir
+		}
+
+		webhookServer := webhook.NewServer(webhookOptions)
+		mgrOptions.WebhookServer = webhookServer
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), mgrOptions)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
@@ -130,6 +136,7 @@ func main() {
 	}
 
 	ctx := context.Background()
+	validationReconciler := controllerv1alpha1.NewValidationReconciler()
 	consumerReconciler := controllerv1alpha1.NewConsumerReconciler()
 	consumerSecretReconciler := controllerv1alpha1.NewConsumerSecretReconciler()
 	consumerConfigMapReconciler := controllerv1alpha1.NewConsumerConfigMapReconciler()
@@ -139,6 +146,7 @@ func main() {
 
 	if err = controllerk8sv1alpha1.NewDeploymentReconciler(
 		reconcilerConfig,
+		validationReconciler,
 		consumerReconciler,
 		consumerSecretReconciler,
 		consumerConfigMapReconciler,
@@ -150,6 +158,7 @@ func main() {
 	}
 	if err = controllerk8sv1alpha1.NewStatefulSetReconciler(
 		reconcilerConfig,
+		validationReconciler,
 		consumerReconciler,
 		consumerSecretReconciler,
 		consumerConfigMapReconciler,
@@ -161,6 +170,7 @@ func main() {
 	}
 	if err = controllerk8sv1alpha1.NewDaemonSetReconciler(
 		reconcilerConfig,
+		validationReconciler,
 		consumerReconciler,
 		consumerSecretReconciler,
 		consumerConfigMapReconciler,
@@ -172,13 +182,14 @@ func main() {
 	}
 	if err = controllerv1alpha1.NewStaticReconciler(
 		reconcilerConfig,
+		validationReconciler,
 		producerReconciler,
 		producerSecretReconciler,
 		producerConfigMapReconciler).SetupWithManager(ctx, mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Static", "version", "v1alpha1")
 		os.Exit(1)
 	}
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	if enableWebhooks {
 		if err = new(apik8sv1alpha1.Deployment).SetupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Deployment")
 			os.Exit(1)

@@ -35,6 +35,7 @@ import (
 
 func NewDaemonSetReconciler(
 	config *reconcilers.Config,
+	validationReconciler *v1alpha1.ValidationReconciler,
 	consumerReconciler *v1alpha1.ConsumerReconciler,
 	consumerSecretReconciler *v1alpha1.ConsumerSecretReconciler,
 	consumerConfigMapReconciler *v1alpha1.ConsumerConfigMapReconciler,
@@ -53,6 +54,9 @@ func NewDaemonSetReconciler(
 		},
 		Config: *config,
 		Reconciler: reconcilers.Sequence[*k8sv1alpha1.DaemonSet]{
+			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *apiv1alpha1.Tensegrity]{
+				Reconciler: validationReconciler,
+			},
 			&reconcilers.CastResource[*k8sv1alpha1.DaemonSet, *apiv1alpha1.Tensegrity]{
 				Reconciler: consumerReconciler,
 			},

@@ -130,6 +130,20 @@ build-installer-monitoring: manifests generate install-kustomize install-yq ## G
 	$(KUSTOMIZE) build manifests/install-monitoring > dist/install-monitoring.yaml
 	$(YQ) 'del(.. | select(has("description")).description)' -i dist/install-monitoring.yaml
 
+.PHONY: build-installer-cert-manager
+build-installer-cert-manager: manifests generate install-kustomize install-yq ## Generate a consolidated YAML with CRDs and deployment.
+	mkdir -p dist
+	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build manifests/install-cert-manager > dist/install-cert-manager.yaml
+	$(YQ) 'del(.. | select(has("description")).description)' -i dist/install-cert-manager.yaml
+
+.PHONY: build-installer-monitoring-cert-manager
+build-installer-monitoring-cert-manager: manifests generate install-kustomize install-yq ## Generate a consolidated YAML with CRDs and deployment.
+	mkdir -p dist
+	cd manifests/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build manifests/install-monitoring-cert-manager > dist/install-monitoring-cert-manager.yaml
+	$(YQ) 'del(.. | select(has("description")).description)' -i dist/install-monitoring-cert-manager.yaml
+
 ##@ Deployment
 
 ifndef ignore-not-found

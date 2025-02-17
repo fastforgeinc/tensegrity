@@ -39,6 +39,10 @@ const (
 	KeysConsumedReason = "KeyConsumed"
 	// KeysConsumedMessage is added in Tensegrity resource when keys are fully consumed.
 	KeysConsumedMessage = "All keys are consumed."
+	// SpecInvalidReason is added in Tensegrity resource when spec is invalid.
+	SpecInvalidReason = "SpecInvalid"
+	// SpecInvalidMessage is added in Tensegrity resource when spec is invalid.
+	SpecInvalidMessage = "Spec is invalid, reason: %s."
 )
 
 // TensegrityConditionType defines the conditions of Tensegrity resource.
@@ -49,6 +53,8 @@ const (
 	TensegrityConsumed TensegrityConditionType = "Consumed"
 	// TensegrityProduced means keys are fully produced and values are found.
 	TensegrityProduced TensegrityConditionType = "Produced"
+	// TensegrityInvalid means spec is not valid.
+	TensegrityInvalid TensegrityConditionType = "Invalid"
 )
 
 type TensegrityCondition struct {
