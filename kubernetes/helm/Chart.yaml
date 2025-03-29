@@ -1,0 +1,17 @@
+apiVersion: v2
+name: tensegrity
+description: Tensegrity helm chart for Kubernetes
+type: application
+version: 0.1.1
+appVersion: "1.16.0"
+kubeVersion: ">= 1.17.0"
+icon: https://cdn.fastforge.com/img/tensegrity.png
+home: https://tensegrity.fastforge.com
+dependencies:
+  - name: cert-manager
+    version: 0.16.1
+    repository: https://charts.jetstack.io
+mainteners:
+  - name: FastForge, Inc.
+    email: tensegrity@fastforge.com
+    url: https://fastforge.com
