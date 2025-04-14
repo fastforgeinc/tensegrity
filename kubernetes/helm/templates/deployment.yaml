@@ -58,7 +58,7 @@ spec:
           {{- toYaml .Values.tensegrity.livenessProbe | nindent 12 }}
         name: manager
         ports:
-        - containerPort: {{ .values.tensegrity.service.port }}
+        - containerPort: {{ .Values.tensegrity.service.port }}
           name: {{ .Values.tensegrity.service.name }}
           protocol: {{ .Values.tensegrity.service.protocol }}
         readinessProbe:
