@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: manager
+    control-plane: controller-manager
+    {{- include "tensegrity.labels" . | nindent 4 }}
+  name: {{ .Release.Name }}-controller-manager
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  progressDeadlineSeconds: {{ .Values.progressDeadlineSeconds }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "tensegrity.selectorLabels" . | nindent 6 }}
+      control-plane: controller-manager
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+        {{- with .Values.tensegrity.podAnnotations }}
+        annotations:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      creationTimestamp: null
+      labels:
+        control-plane: controller-manager
+        {{- include "tensegrity.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.tensegrity.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccount: {{ include "tensegrity.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+      - args:
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --leader-elect
+        command:
+        - /manager
+        image: "{{ .Values.tensegrity.image.repository }}:{{ .Values.tensegrity.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.tensegrity.image.pullPolicy }}
+        livenessProbe:
+          {{- toYaml .Values.tensegrity.livenessProbe | nindent 12 }}
+        name: manager
+        ports:
+        - containerPort: {{ .Values.tensegrity.service.port }}
+          name: {{ .Values.tensegrity.service.name }}
+          protocol: {{ .Values.tensegrity.service.protocol }}
+        readinessProbe:
+          {{- toYaml .Values.tensegrity.readinessProbe | nindent 12 }}
+        resources:
+          {{- toYaml .Values.tensegrity.resources | nindent 12 }}
+        securityContext:
+          {{ toYaml .Values.tensegrity.podSecurityContext | nindent 12 }}
+        terminationMessagePath: {{ .Values.tensegrity.terminationMessagePath }}
+        terminationMessagePolicy: {{ .Values.tensegrity.terminationMessagePolicy }}
+        {{- with .Values.tensegrity.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=0
+        image: "{{ .Values.rbac-proxy.image.repository }}:{{ .Values.rbac-proxy.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.rbac-proxy.image.pullPolicy }}
+        name: {{ .Values.rbac-proxy.name }}
+        ports:
+        - containerPort: {{ .Values.rbac-proxy.service.port }}
+          name: {{ .Values.rbac-proxy.service.name }}
+          protocol: {{ .Values.rbac-proxy.service.protocol }}
+        resources:
+          {{- toYaml .Values.rbac-proxy.resources | nindent 12 }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        terminationMessagePath: {{ .Values.rbac-proxy.terminationMessagePath }}
+        terminationMessagePolicy: {{ .Values.rbac-proxy.terminationMessagePolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      restartPolicy: {{ .Values.restartPolicy }}
+      schedulerName: {{ .Values.schedulerName }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

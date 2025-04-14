@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/instance: manager-rolebinding
+    name: {{ .Release.Name }}-manager-rolebinding
+    {{- include "tensegrity.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-manager-role
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-controller-manager
+  namespace: {{ .Release.Namespace }}
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/instance: proxy-rolebinding
+    app.kubernetes.io/name: clusterrolebinding
+    {{- include "tensegrity.labels" . | nindent 4 }}    
+  name: {{ .Release.Name }}-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-controller-manager
+  namespace: {{ .Release.Namespace }}
