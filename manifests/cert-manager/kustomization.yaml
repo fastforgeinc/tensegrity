@@ -1,7 +1,7 @@
 resources:
 - ../crd
 - ../rbac
-- ../manager
+- ../controller
 - ../webhook
 - certificate.yaml
 

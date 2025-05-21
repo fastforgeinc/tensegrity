@@ -4,4 +4,4 @@ namePrefix: tensegrity-
 resources:
 - ../crd
 - ../rbac
-- ../manager
+- ../controller
