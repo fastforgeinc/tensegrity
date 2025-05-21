@@ -18,9 +18,10 @@ this program. If not, see http://www.gnu.org/licenses/.
 package v1alpha1
 
 import (
-	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 )
 
 // DaemonSetSpec defines the desired state of DaemonSet.

@@ -5,4 +5,7 @@ resources:
 images:
 - name: controller
   newName: ghcr.io/fastforgeinc/tensegrity
-  newTag: latest
+  newTag: no-webhook
+
+patches:
+- path: manager_auth_proxy_patch.yaml

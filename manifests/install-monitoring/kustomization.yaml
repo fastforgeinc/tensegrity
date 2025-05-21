@@ -1,3 +1,8 @@
+namespace: tensegrity
+namePrefix: tensegrity-
+
 resources:
-- ../install
+- ../crd
+- ../rbac
+- ../manager
 - ../prometheus
