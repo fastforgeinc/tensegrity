@@ -81,7 +81,7 @@ var _ = Describe("StatefulSet Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := NewStatefulSetReconciler(
-				reconcilerConfig,
+				reconcilerConfig, validationReconciler,
 				consumerReconciler, consumerSecretReconciler, consumerConfigMapReconciler,
 				producerReconcilerInstance, producerSecretReconcilerInstance, producerConfigMapReconcilerInstance)
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{

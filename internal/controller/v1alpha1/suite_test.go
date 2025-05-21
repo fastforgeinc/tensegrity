@@ -51,6 +51,7 @@ var mgr manager.Manager
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconcilerConfig *reconcilers.Config
+var validationReconciler *ValidationReconciler
 var producerReconcilerInstance *ProducerReconciler
 var producerSecretReconcilerInstance *ProducerSecretReconciler
 var producerConfigMapReconcilerInstance *ProducerConfigMapReconciler
@@ -104,6 +105,7 @@ var _ = BeforeSuite(func() {
 		Tracker:   tracker.New(scheme.Scheme, 1*time.Hour),
 	}
 
+	validationReconciler = NewValidationReconciler()
 	producerReconcilerInstance = NewProducerReconciler()
 	producerSecretReconcilerInstance = NewProducerSecretReconciler()
 	producerConfigMapReconcilerInstance = NewProducerConfigMapReconciler()
