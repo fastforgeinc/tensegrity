@@ -172,7 +172,6 @@ func (r *StatefulSetChildReconciler) DesiredChild(
 func (r *StatefulSetChildReconciler) MergeBeforeUpdate(current, desired *appsv1.StatefulSet) {
 	current.Annotations = reconcilers.MergeMaps(current.Annotations, desired.Annotations)
 	current.Labels = desired.Labels
-	current.Spec = desired.Spec
 }
 
 func (r *StatefulSetChildReconciler) ReflectChildStatusOnParent(

@@ -24,7 +24,6 @@ import (
 	"testing"
 	"time"
 
-	controllerv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
 	"reconciler.io/runtime/reconcilers"
 	"reconciler.io/runtime/tracker"
 
@@ -41,6 +40,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
+	controllerv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -52,6 +52,7 @@ var mgr manager.Manager
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var reconcilerConfig *reconcilers.Config
+var validationReconciler *controllerv1alpha1.ValidationReconciler
 var consumerReconciler *controllerv1alpha1.ConsumerReconciler
 var consumerSecretReconciler *controllerv1alpha1.ConsumerSecretReconciler
 var consumerConfigMapReconciler *controllerv1alpha1.ConsumerConfigMapReconciler
@@ -108,6 +109,7 @@ var _ = BeforeSuite(func() {
 		Tracker:   tracker.New(scheme.Scheme, 1*time.Hour),
 	}
 
+	validationReconciler = controllerv1alpha1.NewValidationReconciler()
 	consumerReconciler = controllerv1alpha1.NewConsumerReconciler()
 	consumerSecretReconciler = controllerv1alpha1.NewConsumerSecretReconciler()
 	consumerConfigMapReconciler = controllerv1alpha1.NewConsumerConfigMapReconciler()

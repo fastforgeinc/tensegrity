@@ -19,14 +19,14 @@ package v1alpha1
 
 import (
 	"context"
+	"sort"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reconciler.io/runtime/reconcilers"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
-
-	"reconciler.io/runtime/reconcilers"
 
 	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
 	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
@@ -155,6 +155,15 @@ func (r *DeploymentChildReconciler) DesiredChild(
 		}
 	}
 
+	sort.Slice(envFrom, func(i, j int) bool {
+		if envFrom[i].SecretRef != nil && envFrom[j].SecretRef != nil {
+			return envFrom[i].SecretRef.Name < envFrom[j].SecretRef.Name
+		}
+		if envFrom[i].ConfigMapRef != nil && envFrom[j].ConfigMapRef != nil {
+			return envFrom[i].ConfigMapRef.Name < envFrom[j].ConfigMapRef.Name
+		}
+		return false
+	})
 	if len(envFrom) > 0 {
 		for i, container := range child.Spec.Template.Spec.InitContainers {
 			child.Spec.Template.Spec.InitContainers[i].EnvFrom = append(
@@ -172,7 +181,6 @@ func (r *DeploymentChildReconciler) DesiredChild(
 func (r *DeploymentChildReconciler) MergeBeforeUpdate(current, desired *appsv1.Deployment) {
 	current.Annotations = reconcilers.MergeMaps(current.Annotations, desired.Annotations)
 	current.Labels = desired.Labels
-	current.Spec = desired.Spec
 }
 
 func (r *DeploymentChildReconciler) ReflectChildStatusOnParent(

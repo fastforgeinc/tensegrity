@@ -22,9 +22,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sort"
 	"strings"
 
-	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -32,6 +32,8 @@ import (
 	"k8s.io/utils/ptr"
 	"reconciler.io/runtime/reconcilers"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 )
 
 func NewProducerReconciler() *ProducerReconciler {
@@ -50,7 +52,6 @@ type ProducerReconciler struct {
 func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tensegrity) error {
 	resource.Status.Produced = nil
 	resource.Status.ProducedKeys = nil
-	v1alpha1.RemoveTensegrityCondition(&resource.Status, v1alpha1.TensegrityProduced)
 
 	if len(resource.Spec.Produces) == 0 {
 		return nil
@@ -60,7 +61,7 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 	keys := make(map[string]string, len(resource.Spec.Produces))
 	sensitiveKeys := make(map[string]string, len(resource.Spec.Produces))
 
-	resource.Status.ProducedKeys = make([]v1alpha1.ProducedKeyStatus, 0, len(resource.Spec.Produces))
+	producedKeys := make([]v1alpha1.ProducedKeyStatus, 0, len(resource.Spec.Produces))
 	for _, produces := range resource.Spec.Produces {
 		var err error
 		var value string
@@ -82,18 +83,30 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 			seenError = true
 		}
 	}
+	sort.Slice(producedKeys, func(i, j int) bool {
+		return producedKeys[i].Key < producedKeys[j].Key
+	})
+	resource.Status.ProducedKeys = producedKeys
 	r.updateStatus(resource)
 
 	if !seenError && len(keys) > 0 {
 		reconcilers.StashValue(ctx, producerConfigMapKeysStashKey, keys)
 		reconcilers.StashValue(ctx, producerConfigMapNameStashKey, resource.Spec.ProducesConfigMapName)
 		resource.Status.ProducedConfigMapName = resource.Spec.ProducesConfigMapName
+	} else {
+		reconcilers.ClearValue(ctx, producerConfigMapKeysStashKey)
+		reconcilers.ClearValue(ctx, producerConfigMapNameStashKey)
+		resource.Status.ProducedConfigMapName = ""
 	}
 
 	if !seenError && len(sensitiveKeys) > 0 {
 		reconcilers.StashValue(ctx, producerSecretKeysStashKey, sensitiveKeys)
 		reconcilers.StashValue(ctx, producerSecretNameStashKey, resource.Spec.ProducesSecretName)
 		resource.Status.ProducedSecretName = resource.Spec.ProducesSecretName
+	} else {
+		reconcilers.ClearValue(ctx, producerSecretKeysStashKey)
+		reconcilers.ClearValue(ctx, producerSecretNameStashKey)
+		resource.Status.ProducedSecretName = ""
 	}
 
 	return nil
