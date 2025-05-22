@@ -172,7 +172,6 @@ func (r *DaemonSetChildReconciler) DesiredChild(
 func (r *DaemonSetChildReconciler) MergeBeforeUpdate(current, desired *appsv1.DaemonSet) {
 	current.Annotations = reconcilers.MergeMaps(current.Annotations, desired.Annotations)
 	current.Labels = desired.Labels
-	current.Spec = desired.Spec
 }
 
 func (r *DaemonSetChildReconciler) ReflectChildStatusOnParent(

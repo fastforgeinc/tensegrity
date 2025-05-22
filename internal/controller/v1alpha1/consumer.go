@@ -21,9 +21,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sort"
 	"strings"
 
-	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -32,6 +32,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 )
 
 type consumedDelegate struct {
@@ -69,7 +71,6 @@ func (r *ConsumerReconciler) Setup(ctx context.Context, _ ctrl.Manager, builder 
 func (r *ConsumerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tensegrity) (err error) {
 	resource.Status.Consumed = nil
 	resource.Status.ConsumedKeys = nil
-	v1alpha1.RemoveTensegrityCondition(&resource.Status, v1alpha1.TensegrityConsumed)
 
 	if len(resource.Spec.Consumes) == 0 {
 		return nil
@@ -84,13 +85,22 @@ func (r *ConsumerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 		reconcilers.StashValue(ctx, consumerConfigMapKeysStashKey, keys)
 		reconcilers.StashValue(ctx, consumerConfigMapNameStashKey, resource.Spec.ConsumesConfigMapName)
 		resource.Status.ConsumedConfigMapName = resource.Spec.ConsumesConfigMapName
+	} else {
+		reconcilers.ClearValue(ctx, consumerConfigMapKeysStashKey)
+		reconcilers.ClearValue(ctx, consumerConfigMapNameStashKey)
+		resource.Status.ConsumedConfigMapName = ""
 	}
 
 	if len(sensitiveKeys) > 0 {
 		reconcilers.StashValue(ctx, consumerSecretKeysStashKey, sensitiveKeys)
 		reconcilers.StashValue(ctx, consumerSecretNameStashKey, resource.Spec.ConsumesSecretName)
 		resource.Status.ConsumedSecretName = resource.Spec.ConsumesSecretName
+	} else {
+		reconcilers.ClearValue(ctx, consumerSecretKeysStashKey)
+		reconcilers.ClearValue(ctx, consumerSecretNameStashKey)
+		resource.Status.ConsumedSecretName = ""
 	}
+
 	return nil
 }
 
@@ -130,6 +140,9 @@ func (r *ConsumerReconciler) getKeys(
 	}
 
 	r.updateStatus(resource)
+	if len(consumesByRef) > 0 {
+		return nil, nil, nil
+	}
 	return keys, sensitiveKeys, nil
 }
 
@@ -218,6 +231,7 @@ func (r *ConsumerReconciler) updateKeyStatus(
 	resource *v1alpha1.Tensegrity, delegate *corev1.ObjectReference, ref corev1.ObjectReference,
 	consumes v1alpha1.ConsumesSpec, err error) {
 
+	consumedKeys := make([]v1alpha1.ConsumedKeyStatus, 0, len(resource.Spec.Produces))
 	for env, key := range consumes.Maps {
 		consumedKeyStatus := v1alpha1.ConsumedKeyStatus{
 			ObjectReference: ref,
@@ -230,8 +244,12 @@ func (r *ConsumerReconciler) updateKeyStatus(
 			consumedKeyStatus.Status = v1alpha1.ConsumedFailure
 			consumedKeyStatus.Reason = ptr.To(err.Error())
 		}
-		resource.Status.ConsumedKeys = append(resource.Status.ConsumedKeys, consumedKeyStatus)
+		consumedKeys = append(consumedKeys, consumedKeyStatus)
 	}
+	sort.Slice(consumedKeys, func(i, j int) bool {
+		return consumedKeys[i].Key < consumedKeys[j].Key
+	})
+	resource.Status.ConsumedKeys = consumedKeys
 }
 
 func (r *ConsumerReconciler) updateStatus(resource *v1alpha1.Tensegrity) {

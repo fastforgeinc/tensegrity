@@ -18,8 +18,9 @@ this program. If not, see http://www.gnu.org/licenses/.
 package v1alpha1
 
 import (
-	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	"reconciler.io/runtime/reconcilers"
+
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 )
 
 type workloadReconciler = reconcilers.SyncReconciler[*v1alpha1.Tensegrity]
