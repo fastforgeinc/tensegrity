@@ -93,8 +93,10 @@ func NewDeploymentChildReconciler() *DeploymentChildReconciler {
 	r.deploymentChildReconciler = deploymentChildReconciler{
 		Name:                       "DeploymentChildReconciler",
 		DesiredChild:               r.DesiredChild,
-		MergeBeforeUpdate:          r.MergeBeforeUpdate,
 		ReflectChildStatusOnParent: r.ReflectChildStatusOnParent,
+		ChildObjectManager: &reconcilers.UpdatingObjectManager[*appsv1.Deployment]{
+			MergeBeforeUpdate: r.MergeBeforeUpdate,
+		},
 	}
 	return r
 }

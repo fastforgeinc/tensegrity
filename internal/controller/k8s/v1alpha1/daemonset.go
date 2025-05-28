@@ -93,8 +93,10 @@ func NewDaemonSetChildReconciler() *DaemonSetChildReconciler {
 	r.daemonSetChildReconciler = daemonSetChildReconciler{
 		Name:                       "DaemonSetChildReconciler",
 		DesiredChild:               r.DesiredChild,
-		MergeBeforeUpdate:          r.MergeBeforeUpdate,
 		ReflectChildStatusOnParent: r.ReflectChildStatusOnParent,
+		ChildObjectManager: &reconcilers.UpdatingObjectManager[*appsv1.DaemonSet]{
+			MergeBeforeUpdate: r.MergeBeforeUpdate,
+		},
 	}
 	return r
 }

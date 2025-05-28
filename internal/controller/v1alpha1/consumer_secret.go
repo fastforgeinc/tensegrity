@@ -37,8 +37,10 @@ func NewConsumerSecretReconciler() *ConsumerSecretReconciler {
 		Name:                       consumerSecretReconcilerName,
 		OurChild:                   r.OurChild,
 		DesiredChild:               r.DesiredChild,
-		MergeBeforeUpdate:          r.MergeBeforeUpdate,
 		ReflectChildStatusOnParent: r.ReflectChildStatusOnParent,
+		ChildObjectManager: &reconcilers.UpdatingObjectManager[*corev1.Secret]{
+			MergeBeforeUpdate: r.MergeBeforeUpdate,
+		},
 	}
 	return r
 }

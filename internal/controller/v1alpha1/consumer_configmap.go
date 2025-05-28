@@ -36,8 +36,10 @@ func NewConsumerConfigMapReconciler() *ConsumerConfigMapReconciler {
 		Name:                       consumerConfigMapReconcilerName,
 		OurChild:                   r.OurChild,
 		DesiredChild:               r.DesiredChild,
-		MergeBeforeUpdate:          r.MergeBeforeUpdate,
 		ReflectChildStatusOnParent: r.ReflectChildStatusOnParent,
+		ChildObjectManager: &reconcilers.UpdatingObjectManager[*corev1.ConfigMap]{
+			MergeBeforeUpdate: r.MergeBeforeUpdate,
+		},
 	}
 	return r
 }

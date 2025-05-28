@@ -25,14 +25,11 @@ import (
 	"time"
 
 	"reconciler.io/runtime/reconcilers"
-	"reconciler.io/runtime/tracker"
 
 	apik8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
 	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"
 	controllerk8sv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/k8s/v1alpha1"
 	controllerv1alpha1 "github.com/fastforgeinc/tensegrity/internal/controller/v1alpha1"
-
-	"github.com/fastforgeinc/tensegrity/pkg/client"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
@@ -48,8 +45,9 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme     = runtime.NewScheme()
+	setupLog   = ctrl.Log.WithName("setup")
+	syncPeriod = 1 * time.Hour
 )
 
 func init() {
@@ -97,8 +95,7 @@ func main() {
 	}
 
 	mgrOptions := ctrl.Options{
-		Scheme:    scheme,
-		NewClient: client.New,
+		Scheme: scheme,
 		Metrics: metricsserver.Options{
 			BindAddress:   metricsAddr,
 			SecureServing: secureMetrics,
@@ -128,14 +125,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	reconcilerConfig := &reconcilers.Config{
-		Client:    mgr.GetClient(),
-		APIReader: mgr.GetAPIReader(),
-		Recorder:  mgr.GetEventRecorderFor("tensegrity"),
-		Tracker:   tracker.New(scheme, 1*time.Hour),
-	}
-
 	ctx := context.Background()
+	config := reconcilers.NewConfig(mgr, nil, syncPeriod)
 	validationReconciler := controllerv1alpha1.NewValidationReconciler()
 	consumerReconciler := controllerv1alpha1.NewConsumerReconciler()
 	consumerSecretReconciler := controllerv1alpha1.NewConsumerSecretReconciler()
@@ -145,7 +136,7 @@ func main() {
 	producerConfigMapReconciler := controllerv1alpha1.NewProducerConfigMapReconciler()
 
 	if err = controllerk8sv1alpha1.NewDeploymentReconciler(
-		reconcilerConfig,
+		&config,
 		validationReconciler,
 		consumerReconciler,
 		consumerSecretReconciler,
@@ -157,7 +148,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = controllerk8sv1alpha1.NewStatefulSetReconciler(
-		reconcilerConfig,
+		&config,
 		validationReconciler,
 		consumerReconciler,
 		consumerSecretReconciler,
@@ -169,7 +160,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = controllerk8sv1alpha1.NewDaemonSetReconciler(
-		reconcilerConfig,
+		&config,
 		validationReconciler,
 		consumerReconciler,
 		consumerSecretReconciler,
@@ -181,7 +172,7 @@ func main() {
 		os.Exit(1)
 	}
 	if err = controllerv1alpha1.NewStaticReconciler(
-		reconcilerConfig,
+		&config,
 		validationReconciler,
 		producerReconciler,
 		producerSecretReconciler,

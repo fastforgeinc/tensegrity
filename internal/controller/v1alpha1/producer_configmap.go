@@ -35,8 +35,11 @@ func NewProducerConfigMapReconciler() *ProducerConfigMapReconciler {
 		Name:                       producerConfigMapReconcilerName,
 		OurChild:                   r.OurChild,
 		DesiredChild:               r.DesiredChild,
-		MergeBeforeUpdate:          r.MergeBeforeUpdate,
 		ReflectChildStatusOnParent: r.ReflectChildStatusOnParent,
+		ChildObjectManager: &reconcilers.UpdatingObjectManager[*corev1.ConfigMap]{
+			MergeBeforeUpdate: r.MergeBeforeUpdate,
+			TrackDesired:      true,
+		},
 	}
 	return r
 }

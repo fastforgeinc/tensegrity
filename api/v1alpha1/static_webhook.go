@@ -18,6 +18,8 @@ this program. If not, see http://www.gnu.org/licenses/.
 package v1alpha1
 
 import (
+	"context"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -34,22 +36,23 @@ func (r *Static) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-tensegrity-fastforge-io-v1alpha1-static,mutating=true,failurePolicy=fail,sideEffects=None,groups=tensegrity.fastforge.io,resources=statics,verbs=create;update,versions=v1alpha1,name=mstatic.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &Static{}
+var _ webhook.CustomDefaulter = &Static{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *Static) Default() {
+func (r *Static) Default(_ context.Context, _ runtime.Object) error {
 	r.Spec.TensegritySpec.SetDefaultProducesName(r.GetName())
 	r.Spec.TensegritySpec.SetDefaultNamespaceDelegate(r.GetNamespace())
 	r.Spec.TensegritySpec.SetDefaultProducesConfigMapName(r.GetName() + DefaultProducesConfigMapNamePrefix)
 	r.Spec.TensegritySpec.SetDefaultProducesSecretName(r.GetName() + DefaultProducesSecretNamePrefix)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-tensegrity-fastforge-io-v1alpha1-static,mutating=false,failurePolicy=fail,sideEffects=None,groups=tensegrity.fastforge.io,resources=statics,verbs=create;update,versions=v1alpha1,name=vstatic.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &Static{}
+var _ webhook.CustomValidator = &Static{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Static) ValidateCreate() (admission.Warnings, error) {
+func (r *Static) ValidateCreate(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	if errs := r.Spec.TensegritySpec.Validate(); len(errs) > 0 {
 		return nil, apierrors.NewInvalid(r.GetObjectKind().GroupVersionKind().GroupKind(), r.GetName(), errs)
 	}
@@ -57,7 +60,7 @@ func (r *Static) ValidateCreate() (admission.Warnings, error) {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Static) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
+func (r *Static) ValidateUpdate(_ context.Context, _, _ runtime.Object) (admission.Warnings, error) {
 	if errs := r.Spec.TensegritySpec.Validate(); len(errs) > 0 {
 		return nil, apierrors.NewInvalid(r.GetObjectKind().GroupVersionKind().GroupKind(), r.GetName(), errs)
 	}
@@ -65,7 +68,7 @@ func (r *Static) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Static) ValidateDelete() (admission.Warnings, error) {
+func (r *Static) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	if errs := r.Spec.TensegritySpec.Validate(); len(errs) > 0 {
 		return nil, apierrors.NewInvalid(r.GetObjectKind().GroupVersionKind().GroupKind(), r.GetName(), errs)
 	}
