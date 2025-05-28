@@ -1,8 +1,8 @@
-name: Release
+name: Build Main
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - 'main'
 
 permissions: {}
 
@@ -37,8 +37,10 @@ jobs:
         with:
           images: |
             ghcr.io/fastforgeinc/tensegrity
+          flavor: |
+            latest=auto
           tags: |
-            type=ref,event=tag
+            type=ref,event=branch
             type=sha
       -
         name: Login to GitHub Container Registry
@@ -59,40 +61,3 @@ jobs:
           push: true
           provenance: false
           sbom: false
-
-  artifacts:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      -
-        name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Setup Golang
-        uses: actions/setup-go@v5.0.1
-        with:
-          go-version: 1.23
-      -
-        name: Generate release artifacts
-        run: |
-          make build-installer IMG_TAG=${{ github.ref_name }}
-          make build-installer-monitoring IMG_TAG=${{ github.ref_name }}
-          make build-installer-monitoring-cert-manager IMG_TAG=${{ github.ref_name }}
-          make build-installer-cert-manager IMG_TAG=${{ github.ref_name }}
-      -
-        name: Draft release
-        uses: softprops/action-gh-release@v2.0.9
-        with:
-          tag_name: ${{ github.event.inputs.tag }}
-          draft: true
-          files: |
-            dist/install.yaml
-            dist/install-monitoring.yaml
-            dist/install-monitoring-cert-manager.yaml
-            dist/install-cert-manager.yaml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
