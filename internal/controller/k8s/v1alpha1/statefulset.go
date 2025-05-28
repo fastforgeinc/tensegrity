@@ -93,8 +93,10 @@ func NewStatefulSetChildReconciler() *StatefulSetChildReconciler {
 	r.statefulSetChildReconciler = statefulSetChildReconciler{
 		Name:                       "StatefulSetChildReconciler",
 		DesiredChild:               r.DesiredChild,
-		MergeBeforeUpdate:          r.MergeBeforeUpdate,
 		ReflectChildStatusOnParent: r.ReflectChildStatusOnParent,
+		ChildObjectManager: &reconcilers.UpdatingObjectManager[*appsv1.StatefulSet]{
+			MergeBeforeUpdate: r.MergeBeforeUpdate,
+		},
 	}
 	return r
 }

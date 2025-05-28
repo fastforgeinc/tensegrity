@@ -21,6 +21,8 @@ this program. If not, see http://www.gnu.org/licenses/.
 package v1alpha1
 
 import (
+	"sort"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -157,11 +159,37 @@ type TensegrityStatus struct {
 	ProducedConfigMapName string `json:"producedConfigMapName,omitempty"`
 	// Conditions a list of conditions a tensegrity resource can have.
 	// +optional
-	Conditions []TensegrityCondition `json:"conditions,omitempty"`
+	Conditions []TensegrityCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 	// ObservedGeneration is the 'Generation' of the resource that
 	// was last processed by the controller.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+}
+
+func (status *TensegrityStatus) ClearConsumes() {
+	status.Consumed = nil
+	status.ConsumedKeys = nil
+	status.ConsumedSecretName = ""
+	status.ConsumedConfigMapName = ""
+}
+
+func (status *TensegrityStatus) SortConsumes() {
+	sort.Slice(status.ConsumedKeys, func(i, j int) bool {
+		return status.ConsumedKeys[i].Key < status.ConsumedKeys[j].Key
+	})
+}
+
+func (status *TensegrityStatus) ClearProduces() {
+	status.Produced = nil
+	status.ProducedKeys = nil
+	status.ProducedSecretName = ""
+	status.ProducedConfigMapName = ""
+}
+
+func (status *TensegrityStatus) SortProduces() {
+	sort.Slice(status.ProducedKeys, func(i, j int) bool {
+		return status.ProducedKeys[i].Key < status.ProducedKeys[j].Key
+	})
 }
 
 func TensegrityFromRef(ref corev1.ObjectReference) *Tensegrity {

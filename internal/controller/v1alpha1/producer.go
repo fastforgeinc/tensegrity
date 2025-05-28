@@ -22,7 +22,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -50,10 +49,8 @@ type ProducerReconciler struct {
 }
 
 func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tensegrity) error {
-	resource.Status.Produced = nil
-	resource.Status.ProducedKeys = nil
-
 	if len(resource.Spec.Produces) == 0 {
+		resource.Status.ClearProduces()
 		return nil
 	}
 
@@ -61,14 +58,14 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 	keys := make(map[string]string, len(resource.Spec.Produces))
 	sensitiveKeys := make(map[string]string, len(resource.Spec.Produces))
 
-	producedKeys := make([]v1alpha1.ProducedKeyStatus, 0, len(resource.Spec.Produces))
+	resource.Status.ProducedKeys = make([]v1alpha1.ProducedKeyStatus, 0, len(resource.Spec.Produces))
 	for _, produces := range resource.Spec.Produces {
 		var err error
 		var value string
 		var object *unstructured.Unstructured
-		object, err = r.getObject(ctx, resource.Namespace, &produces)
+		object, err = r.getObject(ctx, resource.Namespace, produces)
 		if err == nil {
-			value, err = r.parseValue(object, &produces)
+			value, err = r.parseValue(object, produces)
 			switch {
 			case produces.Sensitive && produces.Encoded:
 				sensitiveKeys[produces.Key] = value
@@ -78,15 +75,13 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 				keys[produces.Key] = value
 			}
 		}
-		r.updateKeyStatus(object, resource, &produces, value, err)
+		resource.Status.ProducedKeys = append(resource.Status.ProducedKeys,
+			r.getKeyStatus(object, produces, value, err))
 		if err != nil {
 			seenError = true
 		}
 	}
-	sort.Slice(producedKeys, func(i, j int) bool {
-		return producedKeys[i].Key < producedKeys[j].Key
-	})
-	resource.Status.ProducedKeys = producedKeys
+	resource.Status.SortProduces()
 	r.updateStatus(resource)
 
 	if !seenError && len(keys) > 0 {
@@ -108,12 +103,14 @@ func (r *ProducerReconciler) Sync(ctx context.Context, resource *v1alpha1.Tenseg
 		reconcilers.ClearValue(ctx, producerSecretNameStashKey)
 		resource.Status.ProducedSecretName = ""
 	}
-
+	if seenError {
+		return reconcilers.ErrHaltSubReconcilers
+	}
 	return nil
 }
 
 func (r *ProducerReconciler) getObject(
-	ctx context.Context, namespace string, produces *v1alpha1.ProducesSpec) (*unstructured.Unstructured, error) {
+	ctx context.Context, namespace string, produces v1alpha1.ProducesSpec) (*unstructured.Unstructured, error) {
 
 	if len(produces.Kind) == 0 && len(produces.APIVersion) == 0 {
 		return new(unstructured.Unstructured), nil
@@ -135,7 +132,7 @@ func (r *ProducerReconciler) getObject(
 }
 
 func (r *ProducerReconciler) parseValue(
-	obj *unstructured.Unstructured, produces *v1alpha1.ProducesSpec) (string, error) {
+	obj *unstructured.Unstructured, produces v1alpha1.ProducesSpec) (string, error) {
 
 	jp := jsonpath.New(produces.Key)
 	jp.AllowMissingKeys(false)
@@ -156,38 +153,38 @@ func (r *ProducerReconciler) parseValue(
 	return buf.String(), nil
 }
 
-func (r *ProducerReconciler) updateKeyStatus(
-	obj *unstructured.Unstructured, resource *v1alpha1.Tensegrity,
-	produces *v1alpha1.ProducesSpec, value string, err error) {
+func (r *ProducerReconciler) getKeyStatus(
+	obj *unstructured.Unstructured,
+	produces v1alpha1.ProducesSpec,
+	value string,
+	err error) v1alpha1.ProducedKeyStatus {
 
-	producedKeyStatus := v1alpha1.ProducedKeyStatus{
+	status := v1alpha1.ProducedKeyStatus{
 		Status:    v1alpha1.ProducedSuccess,
 		Key:       produces.Key,
 		Sensitive: produces.Sensitive,
 	}
 
 	if obj != nil {
-		producedKeyStatus.ObjectReference = corev1.ObjectReference{
-			Kind:            obj.GetKind(),
-			Namespace:       obj.GetNamespace(),
-			Name:            obj.GetName(),
-			UID:             obj.GetUID(),
-			APIVersion:      obj.GetAPIVersion(),
-			FieldPath:       produces.FieldPath,
-			ResourceVersion: obj.GetResourceVersion(),
+		status.ObjectReference = corev1.ObjectReference{
+			Kind:       obj.GetKind(),
+			Namespace:  obj.GetNamespace(),
+			Name:       obj.GetName(),
+			APIVersion: obj.GetAPIVersion(),
+			FieldPath:  produces.FieldPath,
 		}
 	}
 
 	if len(value) > 0 && !produces.Sensitive {
-		producedKeyStatus.Value = ptr.To(value)
+		status.Value = ptr.To(value)
 	}
 
 	if err != nil {
-		producedKeyStatus.Status = v1alpha1.ProducedFailure
-		producedKeyStatus.Reason = ptr.To(err.Error())
+		status.Status = v1alpha1.ProducedFailure
+		status.Reason = ptr.To(err.Error())
 	}
 
-	resource.Status.ProducedKeys = append(resource.Status.ProducedKeys, producedKeyStatus)
+	return status
 }
 
 func (r *ProducerReconciler) updateStatus(resource *v1alpha1.Tensegrity) {

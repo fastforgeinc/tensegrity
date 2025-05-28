@@ -21,10 +21,9 @@ import (
 	"context"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reconciler.io/runtime/reconcilers"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
-
-	"reconciler.io/runtime/reconcilers"
 
 	k8sv1alpha1 "github.com/fastforgeinc/tensegrity/api/k8s/v1alpha1"
 	apiv1alpha1 "github.com/fastforgeinc/tensegrity/api/v1alpha1"

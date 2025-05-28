@@ -18,12 +18,15 @@ this program. If not, see http://www.gnu.org/licenses/.
 package v1alpha1
 
 import (
-	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
+	"context"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
+	"github.com/fastforgeinc/tensegrity/api/v1alpha1"
 )
 
 // SetupWebhookWithManager will setup the manager to manage the webhooks
@@ -35,24 +38,25 @@ func (r *DaemonSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 //+kubebuilder:webhook:path=/mutate-k8s-tensegrity-fastforge-io-v1alpha1-daemonset,mutating=true,failurePolicy=fail,sideEffects=None,groups=k8s.tensegrity.fastforge.io,resources=daemonsets,verbs=create;update,versions=v1alpha1,name=mdaemonset.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Defaulter = &DaemonSet{}
+var _ webhook.CustomDefaulter = &DaemonSet{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *DaemonSet) Default() {
+func (r *DaemonSet) Default(_ context.Context, _ runtime.Object) error {
 	r.Spec.TensegritySpec.SetDefaultProducesName(r.GetName())
 	r.Spec.TensegritySpec.SetDefaultNamespaceDelegate(r.GetNamespace())
 	r.Spec.TensegritySpec.SetDefaultConsumesConfigMapName(r.GetName() + v1alpha1.DefaultConsumesConfigMapNamePrefix)
 	r.Spec.TensegritySpec.SetDefaultConsumesSecretName(r.GetName() + v1alpha1.DefaultConsumesSecretNamePrefix)
 	r.Spec.TensegritySpec.SetDefaultProducesConfigMapName(r.GetName() + v1alpha1.DefaultProducesConfigMapNamePrefix)
 	r.Spec.TensegritySpec.SetDefaultProducesSecretName(r.GetName() + v1alpha1.DefaultProducesSecretNamePrefix)
+	return nil
 }
 
 //+kubebuilder:webhook:path=/validate-k8s-tensegrity-fastforge-io-v1alpha1-daemonset,mutating=false,failurePolicy=fail,sideEffects=None,groups=k8s.tensegrity.fastforge.io,resources=daemonsets,verbs=create;update,versions=v1alpha1,name=vdaemonset.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &DaemonSet{}
+var _ webhook.CustomValidator = &DaemonSet{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *DaemonSet) ValidateCreate() (admission.Warnings, error) {
+func (r *DaemonSet) ValidateCreate(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	if errs := r.Spec.TensegritySpec.Validate(); len(errs) > 0 {
 		return nil, apierrors.NewInvalid(r.GetObjectKind().GroupVersionKind().GroupKind(), r.GetName(), errs)
 	}
@@ -60,7 +64,7 @@ func (r *DaemonSet) ValidateCreate() (admission.Warnings, error) {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *DaemonSet) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
+func (r *DaemonSet) ValidateUpdate(_ context.Context, _, _ runtime.Object) (admission.Warnings, error) {
 	if errs := r.Spec.TensegritySpec.Validate(); len(errs) > 0 {
 		return nil, apierrors.NewInvalid(r.GetObjectKind().GroupVersionKind().GroupKind(), r.GetName(), errs)
 	}
@@ -68,7 +72,7 @@ func (r *DaemonSet) ValidateUpdate(_ runtime.Object) (admission.Warnings, error)
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *DaemonSet) ValidateDelete() (admission.Warnings, error) {
+func (r *DaemonSet) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	if errs := r.Spec.TensegritySpec.Validate(); len(errs) > 0 {
 		return nil, apierrors.NewInvalid(r.GetObjectKind().GroupVersionKind().GroupKind(), r.GetName(), errs)
 	}
