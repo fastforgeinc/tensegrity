@@ -38,7 +38,7 @@ jobs:
           images: |
             ghcr.io/fastforgeinc/tensegrity
           flavor: |
-            latest=auto
+            latest=true
           tags: |
             type=ref,event=branch
             type=sha
